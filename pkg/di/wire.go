@@ -5,19 +5,21 @@ package di
 
 import (
 	"github.com/anrisys/quicket/internal/user"
+	"github.com/anrisys/quicket/pkg/config"
 	"github.com/google/wire"
 )
 
-func InitializeApp() (*App, err) {
+func InitializeApp() (*App, error) {
 	wire.Build(
 		CoreSet,
 		user.ProviderSet,
-		wire.Struct(new(App), "*")
+		wire.Struct(new(App), "*"),
 	)
 	return &App{}, nil
 }
 
 type App struct {
-	UserHandler *user.Handler
+	Config 		*config.AppConfig
+	UserHandler *user.UserHandler
 }
 

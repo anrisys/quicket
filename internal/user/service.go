@@ -2,23 +2,23 @@ package user
 
 import "github.com/rs/zerolog"
 
-type ServiceInterface interface {
+type UserServiceInterface interface {
 	Register (email, password string) error
 }
 
-type service struct {
-	repo *RepositoryInterface
-	logger     zerolog.Logger
+type UserService struct {
+	repo 	UserRepositoryInterface
+	logger  zerolog.Logger
 }
 
-func NewService(repo *RepositoryInterface, logger *zerolog.Logger) *service {
-	return &service{
+func NewUserService(repo UserRepositoryInterface, logger zerolog.Logger) *UserService {
+	return &UserService{
 		repo: repo,
-		logger: *logger,
+		logger: logger,
 	}
 }
 
-func (s *service) Register(email, password string) error {
+func (s *UserService) Register(email, password string) error {
 	return nil
 }
 

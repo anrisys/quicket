@@ -2,13 +2,20 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/anrisys/quicket/pkg/di"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	router := gin.New()
+	app, err := di.InitializeApp()
+    if err != nil {
+        log.Fatalf("Failed to initialize app: %v", err)
+    }
+    
+    router := gin.New()
 
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		    return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
@@ -26,5 +33,14 @@ func main() {
 	
 	router.Use(gin.Recovery())
 
-	router.Run("localhost:8080")
+    registerRoutes(router, app)
+    addr := fmt.Sprintf(":%s", app.Config.Server.Port)
+
+	if err := router.Run(addr); err != nil {
+        log.Fatalf("Server failed :%v", err)
+    }
+}
+
+func registerRoutes(r *gin.Engine, app *di.App)  {
+    r.POST("/register", app.UserHandler.Register)
 }

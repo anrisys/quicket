@@ -7,15 +7,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type Handler struct {
-	service *ServiceInterface
+type UserHandler struct {
+	service UserServiceInterface
 	logger zerolog.Logger
 }
 
-func NewHandler(service *ServiceInterface, logger zerolog.Logger) *Handler {
-	return &Handler{service: service, logger: logger}
+func NewUserHandler(service UserServiceInterface, logger zerolog.Logger) *UserHandler {
+	return &UserHandler{service: service, logger: logger}
 }
 
-func (h *Handler) Register(c *gin.Context) {
+func (h *UserHandler) Register(c *gin.Context) {
 	c.String(http.StatusOK, "Hi this is from Register")
 }
