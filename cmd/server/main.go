@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/anrisys/quicket/pkg/di"
+	"github.com/anrisys/quicket/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,9 +32,9 @@ func main() {
     )
 	}))
 	
-	router.Use(gin.Recovery())
-
+	router.Use(middleware.ZerologLogger(), gin.Recovery(), middleware.ErrorHandler())
     registerRoutes(router, app)
+    
     addr := fmt.Sprintf(":%s", app.Config.Server.Port)
 
 	if err := router.Run(addr); err != nil {

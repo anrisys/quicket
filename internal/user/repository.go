@@ -2,7 +2,10 @@ package user
 
 import (
 	"context"
+	"errors"
+	"strings"
 
+	"github.com/anrisys/quicket/pkg/errs"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
@@ -11,6 +14,7 @@ type UserRepositoryInterface interface {
 	Create(ctx context.Context, user *User) error
 	FindById(ctx context.Context, id int) (*User, error)
 	FindByEmail(ctx context.Context, email string) (*User, error)
+	EmailExists(ctx context.Context, email string) bool
 }
 
 type UserRepository struct {
@@ -27,9 +31,18 @@ func NewUserRepository(db *gorm.DB, logger zerolog.Logger) *UserRepository {
 
 func (r *UserRepository) Create(ctx context.Context, user *User) error {
 	err := r.db.WithContext(ctx).Create(user).Error
-	if err != nil {
-		return nil
-	}
+    if err != nil {
+        r.logger.Error().Err(err).Msg("DB operation failed")
+        
+        switch {
+        case errors.Is(err, gorm.ErrDuplicatedKey):
+            return errs.NewConflictError("user already exists")
+		case isConnectionError(err):
+            return errs.NewServiceUnavailableError("database unavailable")
+        default:
+            return errs.NewAppError(500, "DB_OPERATION_FAILED", "Database operation failed", err)
+        }
+    }
 	return nil
 }
 
@@ -43,3 +56,16 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*User, 
 	return nil, nil
 }
 
+func (r *UserRepository) EmailExists(ctx context.Context, email string) bool {
+	var count int64
+
+	r.db.WithContext(ctx).Model(&User{}).Where("email = ?", email).Count(&count)
+	
+	return count > 0
+}
+
+func isConnectionError(err error) bool {
+    // Implement proper connection error detection
+    return strings.Contains(err.Error(), "connection refused") || 
+           errors.Is(err, context.DeadlineExceeded)
+}

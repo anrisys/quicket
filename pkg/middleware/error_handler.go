@@ -58,6 +58,7 @@ func ErrorHandler() gin.HandlerFunc {
 				logEvent.Err(appErr.Unwrap()).
 					Str("type", "app").
 					Str("code", appErr.Code).
+					Int("status", appErr.Status).
 					Msg("Application error")
 
 			default:
