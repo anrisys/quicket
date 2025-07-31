@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/anrisys/quicket/pkg/errs"
@@ -52,8 +53,21 @@ func (r *UserRepository) FindById(ctx context.Context, id int) (*User, error)  {
 }
 
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*User, error)  {
-	// implementation
-	return nil, nil
+	var user User
+	err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
+	if err != nil {
+		r.logger.Error().Ctx(ctx).Msg("DB operation failed")
+
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, fmt.Errorf("%w", errs.ErrNotFound)
+		case isConnectionError(err):
+			return nil, fmt.Errorf("db connection: %w", errs.NewServiceUnavailableError("database unavailable"))
+		default: 
+			return nil, fmt.Errorf("db query: %w", errs.NewAppError(500, "DB_OPERATION_FAILED", "Database operation failed", err))
+		}
+	}
+	return &user, nil
 }
 
 func (r *UserRepository) EmailExists(ctx context.Context, email string) bool {

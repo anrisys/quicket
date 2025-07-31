@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/anrisys/quicket/internal/user/dto"
@@ -24,7 +25,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 	var req dto.RegisterUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		fieldsErrors := errs.ExtractValidationErrors(err)
-		validationErr := errs.NewValidationError("Invalid request data provided", fieldsErrors, err)
+		validationErr := errs.NewValidationError("Invalid request data", fieldsErrors, err)
 		c.Error(validationErr)
 		return
 	}
@@ -37,5 +38,36 @@ func (h *UserHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"code": "SUCCESS",
 		"message": "User registered successfully",
+	})
+}
+
+func (h *UserHandler) Login(c *gin.Context)  {
+	ctx := c.Request.Context()
+
+	var req dto.LoginUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		fieldsErrors := errs.ExtractValidationErrors(err)
+		validateErr := errs.NewValidationError("Invalid login data", fieldsErrors, err)
+		c.Error(validateErr)
+		return
+	}
+
+	user, err := h.service.Login(ctx, &req)
+	if err != nil {
+		var appErr *errs.AppError
+		if errors.As(err, &appErr) {
+			switch appErr.Code {
+			case "INVALID_DATA", "NOT_FOUND":
+				c.JSON(http.StatusBadRequest, gin.H{"error": "email or password is wrong"})
+			default:
+				c.Error(err)
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": "SUCCESS",
+		"message": "User login successfully",
+		"user": user,
 	})
 }

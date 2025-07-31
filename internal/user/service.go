@@ -13,6 +13,7 @@ import (
 
 type UserServiceInterface interface {
 	Register (ctx context.Context, req *dto.RegisterUserRequest) error
+	Login (ctx context.Context, req *dto.LoginUserRequest) (*dto.UserDTO, error)
 }
 
 type UserService struct {
@@ -60,6 +61,31 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterUserRequest
 
 	s.logger.Info().Msgf("New user registered %s", req.Email)
 	return nil
+}
+
+func (s *UserService) Login(ctx context.Context, req *dto.LoginUserRequest) (*dto.UserDTO, error) {
+	s.logger.Debug().Ctx(ctx).Str("email", req.Email).Msg("Attempt to login")
+
+	user, err := s.repo.FindByEmail(ctx, req.Email)
+	if err != nil {
+		return nil, fmt.Errorf("user service: login: %w", err)
+	}
+
+	passwordMatch := CheckPasswordHash(req.Password, user.Password)
+	if !passwordMatch {
+		return nil, fmt.Errorf("email or password is wrong %w",
+			errs.NewAppError(400, "INVALID_DATA", "email or password is wrong"),
+		)
+	}
+
+	userDto := dto.UserDTO{
+		Email: user.Email,
+		PublicID: user.PublicID,
+		Role: user.Role,
+	}
+
+	s.logger.Info().Ctx(ctx).Str("userId", userDto.PublicID).Msg("User login")
+	return &userDto, nil
 }
 
 func HashPassword(password string) (string, error) {
