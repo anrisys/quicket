@@ -23,16 +23,22 @@ type LogConfig struct {
 	Pretty bool   `mapstructure:"LOG_PRETTY"`
 }
 
+type SecurityConfig struct {
+	BcryptCost int `mapstructure:"BCRYPT_COST"`
+}
+
 type AppConfig struct {
 	Server   ServerConfig
 	Logging  LogConfig
 	Database DBConfig
+	Security SecurityConfig
 }
 
 func DefaultConfig() *AppConfig {
 	return &AppConfig{
 		Server:  ServerConfig{Port: "8080"},
 		Logging: LogConfig{Level: "debug", Pretty: true},
+		Security: SecurityConfig{BcryptCost: 14},
 	}
 }
 

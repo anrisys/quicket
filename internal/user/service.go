@@ -6,9 +6,8 @@ import (
 
 	"github.com/anrisys/quicket/internal/user/dto"
 	"github.com/anrisys/quicket/pkg/errs"
-	"github.com/google/uuid"
+	"github.com/anrisys/quicket/pkg/security"
 	"github.com/rs/zerolog"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserServiceInterface interface {
@@ -17,14 +16,20 @@ type UserServiceInterface interface {
 }
 
 type UserService struct {
-	repo 	UserRepositoryInterface
-	logger  zerolog.Logger
+	repo 			UserRepositoryInterface
+	logger  		zerolog.Logger
+	accountSecurity security.AccountSecurityInterface
 }
 
-func NewUserService(repo UserRepositoryInterface, logger zerolog.Logger) *UserService {
+func NewUserService(
+	repo UserRepositoryInterface, 
+	logger zerolog.Logger, 
+	accountSecurity security.AccountSecurityInterface,
+) *UserService {
 	return &UserService{
 		repo: repo,
 		logger: logger,
+		accountSecurity: accountSecurity,
 	}
 }
 
@@ -38,12 +43,12 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterUserRequest
 		return errs.NewConflictError("email already registered")
 	}
 	
-	hashedPassword, err := HashPassword(req.Password)
+	hashedPassword, err := s.accountSecurity.HashPassword(req.Password)
 	if err != nil {
 		return errs.NewInternalError("failed to hash password")
 	}
 
-	publicID, err := GeneratePublicID()
+	publicID, err := s.accountSecurity.GeneratePublicID()
 	if err != nil {
 		return errs.NewInternalError("failed to generate user public id")
 	}
@@ -71,7 +76,7 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginUserRequest) (*dt
 		return nil, fmt.Errorf("user service: login: %w", err)
 	}
 
-	passwordMatch := CheckPasswordHash(req.Password, user.Password)
+	passwordMatch := s.accountSecurity.CheckPasswordHash(req.Password, user.Password)
 	if !passwordMatch {
 		return nil, fmt.Errorf("email or password is wrong %w",
 			errs.NewAppError(400, "INVALID_DATA", "email or password is wrong"),
@@ -86,24 +91,4 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginUserRequest) (*dt
 
 	s.logger.Info().Ctx(ctx).Str("userId", userDto.PublicID).Msg("User login")
 	return &userDto, nil
-}
-
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func CheckPasswordHash(password, hashedPassword string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	return err == nil
-}
-
-func GeneratePublicID() (string, error) {
-	public_id, err := uuid.NewRandom()
-
-	if err != nil {
-		return "", err
-	}
-
-	return public_id.String(), nil
 }

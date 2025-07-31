@@ -11,6 +11,7 @@ import (
 	"github.com/anrisys/quicket/pkg/config"
 	"github.com/anrisys/quicket/pkg/config/logger"
 	"github.com/anrisys/quicket/pkg/database"
+	"github.com/anrisys/quicket/pkg/security"
 )
 
 // Injectors from wire.go:
@@ -26,7 +27,8 @@ func InitializeApp() (*App, error) {
 	}
 	zerologLogger := logger.NewZerolog(appConfig)
 	userRepository := user.NewUserRepository(db, zerologLogger)
-	userService := user.NewUserService(userRepository, zerologLogger)
+	accountSecurity := security.NewAccountSecurity(appConfig)
+	userService := user.NewUserService(userRepository, zerologLogger, accountSecurity)
 	userHandler := user.NewUserHandler(userService, zerologLogger)
 	app := &App{
 		Config:      appConfig,
