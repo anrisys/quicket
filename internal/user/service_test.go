@@ -17,6 +17,25 @@ type MockUserRepo struct {
 	mock.Mock
 }
 
+type MockAccountSecurity struct {
+	mock.Mock
+}
+
+func (m *MockAccountSecurity) HashPassword(ctx context.Context, password string) (string, error)  {
+	args := m.Called(ctx, password)
+	return args.Get(0).(string), args.Error(1)
+}
+
+func (m *MockAccountSecurity) CheckPasswordHash(ctx context.Context, password, hashedPassword string) bool {
+	args := m.Called(ctx, password, hashedPassword)
+	return args.Bool(0)
+}
+
+func (m *MockAccountSecurity) GeneratePublicID(ctx context.Context) (string, error) {
+	args := m.Called(ctx)
+	return args.String(0), args.Error(1)
+}
+
 func (m *MockUserRepo) Create(ctx context.Context, user *User) error {
 	args := m.Called(ctx, user)
 	return args.Error(0)
@@ -47,24 +66,31 @@ func TestUserService_Register(t *testing.T) {
 	
 	t.Run("Success - New User Registration", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
-		service := NewUserService(mockRepo, logger)
+		mockSecurity := new(MockAccountSecurity)
+		service := NewUserService(mockRepo, logger, mockSecurity)
 
 		mockRepo.On("EmailExists", ctx, "valid@example.com").Return(false)
+		mockSecurity.On("HashPassword", ctx, validRequest.Password).
+			Return("Hashed_" + validRequest.Password, nil).Once()
+		mockSecurity.On("GeneratePublicID", ctx).Return("X_PUBLIC_ID", nil).Once()
 		mockRepo.On("Create", ctx, mock.MatchedBy(func(u *User) bool  {
 			return u.Email == "valid@example.com" &&
 				u.Role == "user" && 
-				len(u.PublicID) > 0
+				u.Password == "Hashed_" + validRequest.Password &&
+				u.PublicID == "X_PUBLIC_ID"
 		})).Return(nil)
 
 		err := service.Register(ctx, validRequest)
 
 		assert.NoError(t, err)
 		mockRepo.AssertExpectations(t)
+		mockSecurity.AssertExpectations(t)
 	})
 
 	t.Run("Failure - Email Already Exists", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
-		service := NewUserService(mockRepo, logger)
+		mockSecurity := new(MockAccountSecurity)
+		service := NewUserService(mockRepo, logger, mockSecurity)
 
 		mockRepo.On("EmailExists", ctx, "exists@example.com").Return(true)
 
@@ -80,5 +106,43 @@ func TestUserService_Register(t *testing.T) {
 		assert.Equal(t, http.StatusConflict, appErr.Status)
 		assert.Equal(t, "CONFLICT", appErr.Code) 
 		mockRepo.AssertNotCalled(t, "Create")
+	})
+}
+
+func TestUserService_Login(t *testing.T) {
+	ctx := context.Background()
+	logger := zerolog.Nop()
+	validRequest := &dto.LoginUserRequest{
+		Email: "valid@example.com",
+		Password: "SecurePass123!",
+	}
+	
+	t.Run("Success", func(t *testing.T) {
+		mockRepo := new(MockUserRepo)
+		mockSecurity := new(MockAccountSecurity)
+		service := NewUserService(mockRepo, logger, mockSecurity)
+		hashedPass := "!@#$hashedPass"
+		testUser := &User{
+			Email: validRequest.Email,
+			Password: hashedPass,
+			PublicID: "user_123",
+			Role: "user",
+		}
+
+		mockRepo.On("FindByEmail", ctx, validRequest.Email).Return(testUser, nil)
+		mockSecurity.On("CheckPasswordHash", ctx, validRequest.Password, hashedPass).
+			Return(true)
+
+		userDTO, err := service.Login(ctx, validRequest)
+
+		assert.NoError(t, err)
+		assert.Equal(t, &dto.UserDTO{
+			Email: validRequest.Email,
+			PublicID: "user_123",
+			Role: "user",
+		}, userDTO)
+
+		mockRepo.AssertExpectations(t)
+		mockSecurity.AssertExpectations(t)
 	})
 }

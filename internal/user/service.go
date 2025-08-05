@@ -43,12 +43,12 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterUserRequest
 		return errs.NewConflictError("email already registered")
 	}
 	
-	hashedPassword, err := s.accountSecurity.HashPassword(req.Password)
+	hashedPassword, err := s.accountSecurity.HashPassword(ctx, req.Password)
 	if err != nil {
 		return errs.NewInternalError("failed to hash password")
 	}
 
-	publicID, err := s.accountSecurity.GeneratePublicID()
+	publicID, err := s.accountSecurity.GeneratePublicID(ctx)
 	if err != nil {
 		return errs.NewInternalError("failed to generate user public id")
 	}
@@ -76,7 +76,7 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginUserRequest) (*dt
 		return nil, fmt.Errorf("user service: login: %w", err)
 	}
 
-	passwordMatch := s.accountSecurity.CheckPasswordHash(req.Password, user.Password)
+	passwordMatch := s.accountSecurity.CheckPasswordHash(ctx, req.Password, user.Password)
 	if !passwordMatch {
 		return nil, fmt.Errorf("email or password is wrong %w",
 			errs.NewAppError(400, "INVALID_DATA", "email or password is wrong"),

@@ -6,12 +6,13 @@ import (
 	"github.com/anrisys/quicket/pkg/config"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/net/context"
 )
 
 type AccountSecurityInterface interface {
-	HashPassword(password string) (string, error)
-	CheckPasswordHash(password, hashedPassword string) bool
-	GeneratePublicID() (string, error)
+	HashPassword(ctx context.Context, password string) (string, error)
+	CheckPasswordHash(ctx context.Context, password, hashedPassword string) bool
+	GeneratePublicID(ctx context.Context) (string, error)
 }
 
 type AccountSecurity struct {
@@ -24,17 +25,17 @@ func NewAccountSecurity(cfg *config.AppConfig) *AccountSecurity {
 	}
 }
 
-func (s *AccountSecurity) HashPassword(password string) (string, error) {
+func (s *AccountSecurity) HashPassword(_ctx context.Context, password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), s.bcryptCost)
 	return string(bytes), err
 }
 
-func (s *AccountSecurity) CheckPasswordHash(password, hashedPassword string) bool {
+func (s *AccountSecurity) CheckPasswordHash(_ctx context.Context, password, hashedPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
 }
 
-func (s *AccountSecurity) GeneratePublicID() (string, error) {
+func (s *AccountSecurity) GeneratePublicID(_ctx context.Context) (string, error) {
 	publicID, err := uuid.NewRandom()
 
 	if err != nil {

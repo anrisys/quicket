@@ -44,4 +44,5 @@ func main() {
 
 func registerRoutes(r *gin.Engine, app *di.App)  {
     r.POST("/register", app.UserHandler.Register)
+    r.POST("/login", app.UserHandler.Login)
 }
