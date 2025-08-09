@@ -5,9 +5,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/anrisys/quicket/internal/validation"
 	"github.com/anrisys/quicket/pkg/di"
 	"github.com/anrisys/quicket/pkg/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 func main() {
@@ -31,6 +34,10 @@ func main() {
         param.ErrorMessage,
     )
 	}))
+
+    if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+        validation.RegisterCustomValidation(v)
+    }
 	
 	router.Use(middleware.ZerologLogger(), gin.Recovery(), middleware.ErrorHandler())
     registerRoutes(router, app)
@@ -45,4 +52,8 @@ func main() {
 func registerRoutes(r *gin.Engine, app *di.App)  {
     r.POST("/register", app.UserHandler.Register)
     r.POST("/login", app.UserHandler.Login)
+
+    protected := r.Group("/api/v1")
+    protected.Use(middleware.JWTAuthMiddleware(app.Config.Security.JWTSecret))
+    protected.POST("/events", middleware.AuthorizedRole([]string{"admin", "oganizer"}))
 }

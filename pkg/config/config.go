@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -25,6 +26,9 @@ type LogConfig struct {
 
 type SecurityConfig struct {
 	BcryptCost int `mapstructure:"BCRYPT_COST"`
+	JWTSecret string `mapstructure:"JWT_SECRET"`
+	JWTIssuer string `mapstructure:"JWT_ISSUER"`
+	JWTExpiry time.Duration `mapstructure:"JWT_EXPIRY"`
 }
 
 type AppConfig struct {
@@ -64,6 +68,14 @@ func Load() (*AppConfig, error) {
 
 	if config.Database == (DBConfig{}) {
 		log.Fatal("Database has not been set yet")
+	}
+
+	if config.Security.JWTSecret == "" {
+		log.Fatal("JWT Secret has not been set yet")
+	}
+
+	if config.Security.JWTExpiry == 0 {
+		log.Fatal("JWT Expiry has not been set or is invalid")
 	}
 
 	return config, nil

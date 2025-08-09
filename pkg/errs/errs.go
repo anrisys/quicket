@@ -27,6 +27,13 @@ func (e *AppError) Unwrap() error {
 	return e.Err
 }
 
+func (e *AppError) Is(target error) bool  {
+	if target, ok := target.(*AppError); ok {
+		return e.Code == target.Code
+	}
+	return false
+}
+
 type FieldError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
@@ -82,6 +89,10 @@ func NewServiceUnavailableError(message string) *AppError {
 
 func NewInternalError(message string) *AppError {
     return NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", message, nil)
+}
+
+func NewErrNotFound(resource string) *AppError {
+    return NewAppError(http.StatusNotFound, "NOT_FOUND", fmt.Sprintf("%s not found", resource), nil)
 }
 
 var (

@@ -5,6 +5,7 @@ import (
 	"github.com/anrisys/quicket/pkg/config/logger"
 	"github.com/anrisys/quicket/pkg/database"
 	"github.com/anrisys/quicket/pkg/security"
+	"github.com/anrisys/quicket/pkg/token"
 	"github.com/google/wire"
 )
 
@@ -21,11 +22,15 @@ var (
 	SecuritySet = wire.NewSet(
 		security.NewAccountSecurity,
 	)
+	TokenSet = wire.NewSet(
+		token.NewGenerator,
+	)
 	CoreSet = wire.NewSet(
 		ConfigSet,
 		DatabaseSet, 
 		LoggerSet,
 		SecuritySet,
+		TokenSet,
 		wire.Bind(new(security.AccountSecurityInterface), new(*security.AccountSecurity)),
 	)
 )

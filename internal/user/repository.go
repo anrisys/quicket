@@ -14,6 +14,7 @@ import (
 type UserRepositoryInterface interface {
 	Create(ctx context.Context, user *User) error
 	FindById(ctx context.Context, id int) (*User, error)
+	FindByPublicID(ctx context.Context, publicID string) (*User, error)
 	FindByEmail(ctx context.Context, email string) (*User, error)
 	EmailExists(ctx context.Context, email string) bool
 }
@@ -48,8 +49,19 @@ func (r *UserRepository) Create(ctx context.Context, user *User) error {
 }
 
 func (r *UserRepository) FindById(ctx context.Context, id int) (*User, error)  {
-	// should check if there is error or not? 
-	return nil, nil
+	user := &User{}
+	err := r.db.WithContext(ctx).First(user, id).Error
+	if err != nil {
+		switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				return nil, errs.NewErrNotFound("user");
+			case isConnectionError(err):
+				return nil, errs.NewServiceUnavailableError("database unavailable")
+			default:
+            	return nil, errs.NewAppError(500, "DB_OPERATION_FAILED", "Database operation failed", err)
+        }
+	}
+	return user, nil
 }
 
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*User, error)  {
@@ -66,6 +78,23 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*User, 
 		default: 
 			return nil, fmt.Errorf("db query: %w", errs.NewAppError(500, "DB_OPERATION_FAILED", "Database operation failed", err))
 		}
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) FindByPublicID(ctx context.Context, publicID string) (*User, error)  {
+	var user User
+	err := r.db.WithContext(ctx).Where("public_id = ?", publicID).First(&user).Error
+	if err != nil {
+		r.logger.Error().Ctx(ctx).Msg("DB operation failed")
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.NewErrNotFound("user")
+		}
+		if isConnectionError(err) {
+			return nil, errs.NewServiceUnavailableError("database unavailable")
+		}
+		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
 	return &user, nil
 }

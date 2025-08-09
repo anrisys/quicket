@@ -1,0 +1,17 @@
+CREATE TABLE `events` (
+    `id`                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `public_id`         CHAR(36) NOT NULL UNIQUE,
+    `title`             VARCHAR(256) NOT NULL,
+    `description`       TEXT,
+    `start_date`        DATETIME NOT NULL, 
+    `end_date`          DATETIME NOT NULL, 
+    `max_seats`         BIGINT UNSIGNED NOT NULL,
+    `available_seats`   BIGINT UNSIGNED NOT NULL,
+    `created_at`        DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at`        DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    `deleted_at`        DATETIME(3) NULL,
+    `organizer_id`      BIGINT UNSIGNED NOT NULL,
+    FOREIGN KEY (`organizer_id`) REFERENCES users(`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+    INDEX `idx_events_deleted_at` (`deleted_at`),
+    INDEX `idx_events_start_date` (`start_date`)
+) ENGINE = InnoDB;

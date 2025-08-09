@@ -1,7 +1,6 @@
 package dto
 
-type AuthResponse struct {
-	ID    uint   `json:"id"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
+type LoginUserResponse struct {
+	PublicID string `json:"public_id"`
+	Token    string `json:"token"`
 }

@@ -8,4 +8,5 @@ var ProviderSet = wire.NewSet(
 	NewUserHandler,
 	wire.Bind(new(UserRepositoryInterface), new(*UserRepository)),
 	wire.Bind(new(UserServiceInterface), new(*UserService)),
+	wire.Bind(new(UserDTOServiceInterface), new(*UserService)),
 )
