@@ -13,7 +13,9 @@ import (
 
 type EventServiceInterface interface {
 	Create(ctx context.Context, req *dto.CreateEventRequest, organizer int) (*Event, error)
-	eventExists(ctx context.Context, title string) (bool, error)
+	FindByID(ctx context.Context, id uint) (*Event, error)
+	FindByPublicID(ctx context.Context, publicID string) (*Event, error)
+	eventExistsByTitle(ctx context.Context, title string) (bool, error)
 	prepareEvent(ctx context.Context, req *dto.CreateEventRequest, userID int) (*Event, error)
 }
 
@@ -45,7 +47,7 @@ func (s *EventService) Create(ctx context.Context, req *dto.CreateEventRequest, 
 
 	s.logger.Debug().Int("userId", organizer).Msg("Checking if webinar same title already exists")
 	
-	exists, err := s.eventExists(ctx, req.Title)
+	exists, err := s.eventExistsByTitle(ctx, req.Title)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -68,7 +70,35 @@ func (s *EventService) Create(ctx context.Context, req *dto.CreateEventRequest, 
 	return registeredEvent, err
 }
 
-func (s *EventService) eventExists(ctx context.Context, title string) (bool, error) {
+func (s *EventService) FindByID(ctx context.Context, id uint) (*Event, error) {
+	event, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
+func (s *EventService) FindByPublicID(ctx context.Context, publicID string) (*Event, error) {
+	event, err := s.repo.FindByPublicID(ctx, publicID)
+	if err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
+func (s *EventService) GetEventDateTimeAndSeats(ctx context.Context, publicID string) (*dto.EventDateTimeAndSeats, error) {
+	event, err := s.repo.FindByPublicID(ctx, publicID)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.EventDateTimeAndSeats{
+		ID: int(event.ID),
+		AvailableSeats: event.AvailableSeats,
+		EndDate: event.EndDate,
+	}, nil
+}
+
+func (s *EventService) eventExistsByTitle(ctx context.Context, title string) (bool, error) {
 	_, err := s.repo.FindByTitle(ctx, title)
 	if err == nil {
 		return true, nil

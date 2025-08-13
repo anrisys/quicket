@@ -14,6 +14,8 @@ import (
 type EventRepositoryInterface interface {
 	Create(ctx context.Context, event *Event) (*Event, error)
 	FindByTitle(ctx context.Context, title string) (*Event, error)
+	FindByID(ctx context.Context, id uint) (*Event, error)
+	FindByPublicID(ctx context.Context, publicID string) (*Event, error) 
 }
 
 type EventRepository struct {
@@ -53,6 +55,36 @@ func (r *EventRepository) FindByTitle(ctx context.Context, title string) (*Event
             return nil, errs.NewServiceUnavailableError("database unavailable")
         }
         return nil, fmt.Errorf("failed to find event by title: %w", err)
+	}
+	return event, nil
+}
+
+func (r *EventRepository) FindByID(ctx context.Context, id uint) (*Event, error)  {
+	event := &Event{}
+	err := r.db.WithContext(ctx).First(event, id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.NewErrNotFound("event")
+		}
+		if isConnectionError(err) {
+			return nil, errs.NewServiceUnavailableError("database unavailable")
+		}
+		return nil, fmt.Errorf("failed to find event by ID: %w", err)
+	}
+	return event, nil
+}
+
+func (r *EventRepository) FindByPublicID(ctx context.Context, publicID string) (*Event, error) {
+	event := &Event{}
+	err := r.db.WithContext(ctx).Take(event, "public_id = ?", publicID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.NewErrNotFound("event")
+		}
+		if isConnectionError(err) {
+			return nil, errs.NewServiceUnavailableError("database unavailable")
+		}
+		return nil, fmt.Errorf("failed to find event by ID: %w", err)
 	}
 	return event, nil
 }

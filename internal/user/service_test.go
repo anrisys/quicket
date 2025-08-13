@@ -56,6 +56,12 @@ func (m *MockUserRepo) EmailExists(ctx context.Context, email string) bool {
 	return args.Bool(0) // Special handling for bool return
 }
 
+
+func (m *MockUserRepo) FindByPublicID(ctx context.Context, publicID string) (*User, error) {
+	args := m.Called(ctx, publicID)
+	return args.Get(0).(*User), args.Error(1)
+}
+
 func TestUserService_Register(t *testing.T) {
 	ctx := context.Background()
 	logger := zerolog.Nop()

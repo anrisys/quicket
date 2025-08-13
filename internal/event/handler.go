@@ -28,12 +28,6 @@ func (h *EventHandler) Create(c *gin.Context) {
 	ctx := c.Request.Context()
 	publicID := c.GetString("publicID")
 
-	userDTO, err := h.UserService.FindUserByPublicID(ctx, publicID)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
 	var req *dto.CreateEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		fieldsErrors := errs.ExtractValidationErrors(err)

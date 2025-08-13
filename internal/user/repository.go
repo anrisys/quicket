@@ -17,6 +17,7 @@ type UserRepositoryInterface interface {
 	FindByPublicID(ctx context.Context, publicID string) (*User, error)
 	FindByEmail(ctx context.Context, email string) (*User, error)
 	EmailExists(ctx context.Context, email string) bool
+	GetUserID(ctx context.Context, publicID string) (*int, error)
 }
 
 type UserRepository struct {
@@ -97,6 +98,23 @@ func (r *UserRepository) FindByPublicID(ctx context.Context, publicID string) (*
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
 	return &user, nil
+}
+
+func (r *UserRepository) GetUserID(ctx context.Context, publicID string) (*int, error)  {
+	var userID *int
+	err := r.db.WithContext(ctx).Table("users").Where("public_id = ?", publicID).Take(&userID).Error
+	if err != nil {
+		r.logger.Error().Ctx(ctx).Msg("DB operation failed")
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.NewErrNotFound("user")
+		}
+		if isConnectionError(err) {
+			return nil, errs.NewServiceUnavailableError("database unavailable")
+		}
+		return nil, fmt.Errorf("failed to find user: %w", err)
+	}
+	return userID, nil
 }
 
 func (r *UserRepository) EmailExists(ctx context.Context, email string) bool {

@@ -17,10 +17,6 @@ type UserServiceInterface interface {
 	FindUserById (ctx context.Context, id int) (*dto.UserDTO, error)
 }
 
-type UserDTOServiceInterface interface {
-	FindUserByPublicID(ctx context.Context, publicID string) (*dto.UserDTO, error)
-}
-
 type UserService struct {
 	repo 			UserRepositoryInterface
 	logger  		zerolog.Logger
@@ -122,6 +118,10 @@ func (s *UserService) FindUserByPublicID(ctx context.Context, publicID string) (
 		return nil, fmt.Errorf("user service#findByPublicID: %w ", err)
 	}
 	return s.toUserDTO(user), nil
+}
+
+func (s *UserService) GetUserID(ctx context.Context, publicID string) (*int, error) {
+	return s.repo.GetUserID(ctx, publicID)
 }
 
 func (s *UserService) toUserDTO(user *User) *dto.UserDTO {
