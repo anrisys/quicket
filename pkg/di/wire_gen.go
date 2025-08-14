@@ -7,11 +7,14 @@
 package di
 
 import (
+	"github.com/anrisys/quicket/internal/booking"
+	"github.com/anrisys/quicket/internal/event"
 	"github.com/anrisys/quicket/internal/user"
 	"github.com/anrisys/quicket/pkg/config"
 	"github.com/anrisys/quicket/pkg/config/logger"
 	"github.com/anrisys/quicket/pkg/database"
 	"github.com/anrisys/quicket/pkg/security"
+	"github.com/anrisys/quicket/pkg/token"
 )
 
 // Injectors from wire.go:
@@ -28,11 +31,20 @@ func InitializeApp() (*App, error) {
 	zerologLogger := logger.NewZerolog(appConfig)
 	userRepository := user.NewUserRepository(db, zerologLogger)
 	accountSecurity := security.NewAccountSecurity(appConfig)
-	userService := user.NewUserService(userRepository, zerologLogger, accountSecurity)
+	generator := token.NewGenerator(appConfig)
+	userService := user.NewUserService(userRepository, zerologLogger, accountSecurity, generator)
 	userHandler := user.NewUserHandler(userService, zerologLogger)
+	gormRepository := booking.NewGormRepository(db, zerologLogger)
+	eventRepository := event.NewEventRepository(db, zerologLogger)
+	eventService := event.NewEventService(eventRepository, userService, zerologLogger)
+	service := booking.NewService(gormRepository, eventService, zerologLogger, userService)
+	handler := booking.NewHandler(service, zerologLogger)
+	eventHandler := event.NewEventHandler(eventService, zerologLogger)
 	app := &App{
-		Config:      appConfig,
-		UserHandler: userHandler,
+		Config:         appConfig,
+		UserHandler:    userHandler,
+		BookingHandler: handler,
+		EventHandler:   eventHandler,
 	}
 	return app, nil
 }
@@ -40,6 +52,8 @@ func InitializeApp() (*App, error) {
 // wire.go:
 
 type App struct {
-	Config      *config.AppConfig
-	UserHandler *user.UserHandler
+	Config         *config.AppConfig
+	UserHandler    *user.UserHandler
+	BookingHandler *booking.Handler
+	EventHandler   *event.EventHandler
 }

@@ -12,13 +12,7 @@ import (
 )
 
 func InitializeApp() (*App, error) {
-	wire.Build(
-		CoreSet,
-		user.ProviderSet,
-		booking.ProviderSet,
-		event.ProviderSet,
-		wire.Struct(new(App), "*"),
-	)
+	wire.Build(AppProviderSet)
 	return &App{}, nil
 }
 
@@ -28,4 +22,3 @@ type App struct {
 	BookingHandler *booking.Handler
 	EventHandler *event.EventHandler
 }
-
