@@ -8,17 +8,10 @@ import (
 
 	"github.com/anrisys/quicket/internal/booking/dto"
 	"github.com/anrisys/quicket/pkg/errs"
+	"github.com/anrisys/quicket/pkg/types"
 	"github.com/anrisys/quicket/pkg/util"
 	"github.com/rs/zerolog"
 )
-
-type UserReader interface {
-	GetUserID(ctx context.Context, publicID string) (*int, error)
-}
-
-type EventReader interface {
-	GetEventDateTimeAndSeats(ctx context.Context, publicID string) (*dto.EventDateTimeAndSeats, error)
-}
 
 type Service interface {
 	Create(ctx context.Context, req *dto.CreateBookingRequest, userID string) (*dto.BookingDTO, error)
@@ -26,15 +19,15 @@ type Service interface {
 
 type service struct {
 	repo Repository
-	events EventReader
-	users UserReader
+	events types.EventReader
+	users types.UserReader
 	logger zerolog.Logger
 }
 
 func NewService(repo Repository, 
-	events EventReader, 
+	events types.EventReader, 
 	logger zerolog.Logger,
-	users UserReader) *service {
+	users types.UserReader) *service {
 	return &service{
 		repo: repo,
 		events: events,

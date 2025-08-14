@@ -21,6 +21,10 @@ type MockAccountSecurity struct {
 	mock.Mock
 }
 
+type MockGenerator struct {
+	mock.Mock
+}
+
 func (m *MockAccountSecurity) HashPassword(ctx context.Context, password string) (string, error)  {
 	args := m.Called(ctx, password)
 	return args.Get(0).(string), args.Error(1)
@@ -56,10 +60,19 @@ func (m *MockUserRepo) EmailExists(ctx context.Context, email string) bool {
 	return args.Bool(0) // Special handling for bool return
 }
 
-
 func (m *MockUserRepo) FindByPublicID(ctx context.Context, publicID string) (*User, error) {
 	args := m.Called(ctx, publicID)
 	return args.Get(0).(*User), args.Error(1)
+}
+
+func (m *MockUserRepo) GetUserID(ctx context.Context, publicID string) (*int, error) {
+	args := m.Called(ctx, publicID)
+	return args.Get(0).(*int), args.Error(1)
+}
+
+func (m *MockGenerator) GenerateToken(publicID, role string) (string, error) {
+	args := m.Called(publicID, role)
+	return args.Get(0).(string), args.Error(1)
 }
 
 func TestUserService_Register(t *testing.T) {
@@ -73,7 +86,8 @@ func TestUserService_Register(t *testing.T) {
 	t.Run("Success - New User Registration", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
 		mockSecurity := new(MockAccountSecurity)
-		service := NewUserService(mockRepo, logger, mockSecurity)
+		mockGenerator := new(MockGenerator)
+		service := NewUserService(mockRepo, logger, mockSecurity, mockGenerator)
 
 		mockRepo.On("EmailExists", ctx, "valid@example.com").Return(false)
 		mockSecurity.On("HashPassword", ctx, validRequest.Password).
@@ -96,7 +110,8 @@ func TestUserService_Register(t *testing.T) {
 	t.Run("Failure - Email Already Exists", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
 		mockSecurity := new(MockAccountSecurity)
-		service := NewUserService(mockRepo, logger, mockSecurity)
+		mockGenerator := new(MockGenerator)
+		service := NewUserService(mockRepo, logger, mockSecurity, mockGenerator)
 
 		mockRepo.On("EmailExists", ctx, "exists@example.com").Return(true)
 
@@ -126,7 +141,8 @@ func TestUserService_Login(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
 		mockSecurity := new(MockAccountSecurity)
-		service := NewUserService(mockRepo, logger, mockSecurity)
+		mockGenerator := new(MockGenerator)
+		service := NewUserService(mockRepo, logger, mockSecurity, mockGenerator)
 		hashedPass := "!@#$hashedPass"
 		testUser := &User{
 			Email: validRequest.Email,

@@ -14,9 +14,3 @@ type EventDTO struct {
 	CreatedAt		time.Time
 	UpdatedAt		time.Time
 }
-
-type EventDateTimeAndSeats struct {
-	ID             	int
-	AvailableSeats 	uint64
-	EndDate 		time.Time
-}

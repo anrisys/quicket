@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/anrisys/quicket/internal/event/dto"
-	"github.com/anrisys/quicket/internal/user"
 	"github.com/anrisys/quicket/pkg/errs"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
@@ -12,14 +11,12 @@ import (
 
 type EventHandler struct {
 	EventService EventServiceInterface
-	UserService user.UserDTOServiceInterface
 	logger  zerolog.Logger
 }
 
-func NewEventHandler(eventService EventServiceInterface, userService user.UserDTOServiceInterface, logger zerolog.Logger) *EventHandler {
+func NewEventHandler(eventService EventServiceInterface, logger zerolog.Logger) *EventHandler {
 	return &EventHandler{
 		EventService: eventService,
-		UserService: userService,
 		logger: logger,
 	}
 }
@@ -36,7 +33,7 @@ func (h *EventHandler) Create(c *gin.Context) {
 		return
 	}
 
-	event, err := h.EventService.Create(ctx, req, userDTO.ID)
+	event, err := h.EventService.Create(ctx, req, publicID)
 	if err != nil {
 		c.Error(err)
 	}

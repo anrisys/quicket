@@ -5,63 +5,62 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/anrisys/quicket/internal/event/dto"
+	commonDTO "github.com/anrisys/quicket/internal/dto"
+	eventDTO "github.com/anrisys/quicket/internal/event/dto"
 	"github.com/anrisys/quicket/pkg/errs"
+	"github.com/anrisys/quicket/pkg/types"
 	"github.com/anrisys/quicket/pkg/util"
 	"github.com/rs/zerolog"
 )
 
 type EventServiceInterface interface {
-	Create(ctx context.Context, req *dto.CreateEventRequest, organizer int) (*Event, error)
+	Create(ctx context.Context, req *eventDTO.CreateEventRequest, userPublicID string) (*Event, error)
 	FindByID(ctx context.Context, id uint) (*Event, error)
 	FindByPublicID(ctx context.Context, publicID string) (*Event, error)
 	eventExistsByTitle(ctx context.Context, title string) (bool, error)
-	prepareEvent(ctx context.Context, req *dto.CreateEventRequest, userID int) (*Event, error)
+	prepareEvent(ctx context.Context, req *eventDTO.CreateEventRequest, userID int) (*Event, error)
 }
 
 type EventService struct {
 	repo EventRepositoryInterface
+	users types.UserReader
 	logger zerolog.Logger
 }
 
-func NewEventService(repo EventRepositoryInterface, logger zerolog.Logger) *EventService {
+func NewEventService(repo EventRepositoryInterface, users types.UserReader, logger zerolog.Logger) *EventService {
 	return &EventService{
 		repo: repo,
+		users: users,
 		logger: logger,
 	}
 }
 
-func (s *EventService) Create(ctx context.Context, req *dto.CreateEventRequest, organizer int) (*Event, error) {
-	const op = "event/service.Create"
-	s.logger.Debug().Int("userId", organizer).Msg("Attempt to create event")
-	s.logger.Debug().Int("userId", organizer).Msg("Checking if user can create event")
-	
-	// role, err := s.roleService.GetUserRole(ctx, organizer)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("%s: failed to get user: %w", op, err)
-	// }
+func (s *EventService) Create(ctx context.Context, req *eventDTO.CreateEventRequest, userPublicID string) (*Event, error) {
+	log := s.logger.With().
+		Str("user_id", userPublicID).
+		Logger()
 
-	// if role != "organizer" && role != "admin" {
-	// 	return nil, errs.ErrForbidden
-	// }
+	log.Info().Msg("Create new event")
+	usr, err := s.users.FindUserByPublicID(ctx, userPublicID)
+	if err != nil {
+		return nil, fmt.Errorf("event/service#create: %w", err)
+	}
 
-	s.logger.Debug().Int("userId", organizer).Msg("Checking if webinar same title already exists")
-	
 	exists, err := s.eventExistsByTitle(ctx, req.Title)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("event/service#create: %w", err)
 	}
 
 	if exists {
 		return nil, errs.NewConflictError("event with this title already exists")
 	}
 
-	newEvent, err := s.prepareEvent(ctx, req, organizer)
+	newEv, err := s.prepareEvent(ctx, req, usr.ID)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, err
 	}
 
-	registeredEvent, err := s.repo.Create(ctx, newEvent)
+	registeredEvent, err := s.repo.Create(ctx, newEv)
 
 	if err != nil {
 		return nil, fmt.Errorf("event service#create: %w", err)
@@ -86,12 +85,12 @@ func (s *EventService) FindByPublicID(ctx context.Context, publicID string) (*Ev
 	return event, nil
 }
 
-func (s *EventService) GetEventDateTimeAndSeats(ctx context.Context, publicID string) (*dto.EventDateTimeAndSeats, error) {
+func (s *EventService) GetEventDateTimeAndSeats(ctx context.Context, publicID string) (*commonDTO.EventDateTimeAndSeats, error){
 	event, err := s.repo.FindByPublicID(ctx, publicID)
 	if err != nil {
 		return nil, err
 	}
-	return &dto.EventDateTimeAndSeats{
+	return &commonDTO.EventDateTimeAndSeats{
 		ID: int(event.ID),
 		AvailableSeats: event.AvailableSeats,
 		EndDate: event.EndDate,
@@ -109,7 +108,7 @@ func (s *EventService) eventExistsByTitle(ctx context.Context, title string) (bo
 	return false, err
 }
 
-func (s *EventService) prepareEvent(ctx context.Context, req *dto.CreateEventRequest, userID int) (*Event, error) {
+func (s *EventService) prepareEvent(ctx context.Context, req *eventDTO.CreateEventRequest, userID int) (*Event, error) {
 	publicID, err := util.GeneratePublicID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate public ID: %w", err)

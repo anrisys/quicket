@@ -6,6 +6,6 @@ var ProviderSet = wire.NewSet(
 	NewGormRepository,
 	NewService,
 	NewHandler,
-	wire.Bind(new(Booking), new(*GormRepository)),
+	wire.Bind(new(Repository), new(*GormRepository)),
 	wire.Bind(new(Service), new(*service)),
 )

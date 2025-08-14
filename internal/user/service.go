@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/anrisys/quicket/internal/user/dto"
+	commonDTO "github.com/anrisys/quicket/internal/dto"
+	userDTO "github.com/anrisys/quicket/internal/user/dto"
 	"github.com/anrisys/quicket/pkg/errs"
 	"github.com/anrisys/quicket/pkg/security"
 	"github.com/anrisys/quicket/pkg/token"
@@ -12,31 +13,33 @@ import (
 )
 
 type UserServiceInterface interface {
-	Register (ctx context.Context, req *dto.RegisterUserRequest) error
-	Login (ctx context.Context, req *dto.LoginUserRequest) (*dto.LoginUserResponse, error)
-	FindUserById (ctx context.Context, id int) (*dto.UserDTO, error)
+	Register(ctx context.Context, req *userDTO.RegisterUserRequest) error
+	Login(ctx context.Context, req *userDTO.LoginUserRequest) (*userDTO.LoginUserResponse, error)
+	FindUserById(ctx context.Context, id int) (*userDTO.UserDTO, error)
 }
 
 type UserService struct {
 	repo 			UserRepositoryInterface
 	logger  		zerolog.Logger
 	accountSecurity security.AccountSecurityInterface
-	tokenGenerator 	token.Generator
+	tokenGenerator 	token.GeneratorInterface
 }
 
 func NewUserService(
 	repo UserRepositoryInterface, 
 	logger zerolog.Logger, 
 	accountSecurity security.AccountSecurityInterface,
+	tokenGenerator 	token.GeneratorInterface,
 ) *UserService {
 	return &UserService{
 		repo: repo,
 		logger: logger,
 		accountSecurity: accountSecurity,
+		tokenGenerator: tokenGenerator,
 	}
 }
 
-func (s *UserService) Register(ctx context.Context, req *dto.RegisterUserRequest) error {
+func (s *UserService) Register(ctx context.Context, req *userDTO.RegisterUserRequest) error {
 	s.logger.Debug().Str("email", req.Email).Msg("Attempt to register a user")
 	
 	s.logger.Debug().Msgf("Checking if emai exists %s", req.Email)
@@ -71,7 +74,7 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterUserRequest
 	return nil
 }
 
-func (s *UserService) Login(ctx context.Context, req *dto.LoginUserRequest) (*dto.LoginUserResponse, error) {
+func (s *UserService) Login(ctx context.Context, req *userDTO.LoginUserRequest) (*userDTO.LoginUserResponse, error) {
 	s.logger.Debug().Ctx(ctx).Str("email", req.Email).Msg("Attempt to login")
 
 	user, err := s.repo.FindByEmail(ctx, req.Email)
@@ -91,7 +94,7 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginUserRequest) (*dt
 		return nil, fmt.Errorf("failed to generate JWT token: %w", err)
 	}
 
-	response := &dto.LoginUserResponse{
+	response := &userDTO.LoginUserResponse{
 		PublicID: user.PublicID,
 		Token: token,
 	}
@@ -100,7 +103,7 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginUserRequest) (*dt
 	return response, nil
 }
 
-func (s *UserService) FindUserById(ctx context.Context, id int) (*dto.UserDTO, error) {
+func (s *UserService) FindUserById(ctx context.Context, id int) (*userDTO.UserDTO, error) {
 	s.logger.Debug().Ctx(ctx).Int("user id", id).Msg("Attempt to login")
 
 	user, err := s.repo.FindById(ctx, id)
@@ -112,20 +115,25 @@ func (s *UserService) FindUserById(ctx context.Context, id int) (*dto.UserDTO, e
 	return s.toUserDTO(user), nil
 }
 
-func (s *UserService) FindUserByPublicID(ctx context.Context, publicID string) (*dto.UserDTO, error) {
+func (s *UserService) FindUserByPublicID(ctx context.Context, publicID string) (*commonDTO.UserDTO, error) {
 	user, err := s.repo.FindByPublicID(ctx, publicID)
 	if err != nil {
 		return nil, fmt.Errorf("user service#findByPublicID: %w ", err)
 	}
-	return s.toUserDTO(user), nil
+	return &commonDTO.UserDTO{
+		ID: int(user.ID),
+		PublicID: user.PublicID,
+		Email: user.Email,
+		Role: user.Role,
+	}, nil
 }
 
 func (s *UserService) GetUserID(ctx context.Context, publicID string) (*int, error) {
 	return s.repo.GetUserID(ctx, publicID)
 }
 
-func (s *UserService) toUserDTO(user *User) *dto.UserDTO {
-	return &dto.UserDTO{
+func (s *UserService) toUserDTO(user *User) *userDTO.UserDTO {
+	return &userDTO.UserDTO{
 		ID: int(user.ID),
 		Email: user.Email,
 		PublicID: user.PublicID,

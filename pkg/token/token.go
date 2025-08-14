@@ -7,17 +7,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type GeneratorInterface interface {
+	GenerateToken(publicID, role string) (string, error)
+}
+
 type Generator struct {
 	secret string
 	issuer string
 	expiry time.Duration
-}
-
-type Claims struct {
-	sub 	string
-	role	string
-	iss 	string
-	iat 	string
 }
 
 func NewGenerator(cfg *config.AppConfig) *Generator {
