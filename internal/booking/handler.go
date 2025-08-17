@@ -10,11 +10,11 @@ import (
 )
 
 type Handler struct {
-	svc Service
+	svc ServiceInterface
 	logger zerolog.Logger
 }
 
-func NewHandler(svc Service, logger zerolog.Logger) *Handler {
+func NewHandler(svc ServiceInterface, logger zerolog.Logger) *Handler {
 	return &Handler{
 		svc: svc,
 		logger: logger,

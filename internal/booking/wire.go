@@ -7,5 +7,5 @@ var ProviderSet = wire.NewSet(
 	NewService,
 	NewHandler,
 	wire.Bind(new(Repository), new(*GormRepository)),
-	wire.Bind(new(Service), new(*service)),
+	wire.Bind(new(ServiceInterface), new(*Service)),
 )

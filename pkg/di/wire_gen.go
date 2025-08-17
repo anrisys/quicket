@@ -9,6 +9,7 @@ package di
 import (
 	"github.com/anrisys/quicket/internal/booking"
 	"github.com/anrisys/quicket/internal/event"
+	"github.com/anrisys/quicket/internal/payment"
 	"github.com/anrisys/quicket/internal/user"
 	"github.com/anrisys/quicket/pkg/config"
 	"github.com/anrisys/quicket/pkg/config/logger"
@@ -37,7 +38,9 @@ func InitializeApp() (*App, error) {
 	gormRepository := booking.NewGormRepository(db, zerologLogger)
 	eventRepository := event.NewEventRepository(db, zerologLogger)
 	eventService := event.NewEventService(eventRepository, userService, zerologLogger)
-	service := booking.NewService(gormRepository, eventService, zerologLogger, userService)
+	paymentGormRepository := payment.NewRepository(db, zerologLogger)
+	paymentService := payment.NewPaymentService(paymentGormRepository, zerologLogger)
+	service := booking.NewService(gormRepository, eventService, zerologLogger, paymentService, userService)
 	handler := booking.NewHandler(service, zerologLogger)
 	eventHandler := event.NewEventHandler(eventService, zerologLogger)
 	app := &App{

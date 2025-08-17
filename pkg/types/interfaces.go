@@ -14,3 +14,11 @@ type UserReader interface {
 type EventReader interface {
 	GetEventDateTimeAndSeats(ctx context.Context, publicID string) (*commonDTO.EventDateTimeAndSeats, error)
 }
+
+type BookingReader interface {
+	GetSimpleBookingDTO(ctx context.Context, publicID string) (*commonDTO.SimpleBookingDTO, error)
+}
+
+type SimulatePayment interface {
+	SimulatePayment(ctx context.Context, bookData *commonDTO.SimulateBookingPayment) (*commonDTO.PaymentDTO, error)
+}

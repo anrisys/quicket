@@ -2,8 +2,10 @@ package booking
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	commonDTO "github.com/anrisys/quicket/internal/dto"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -11,6 +13,7 @@ import (
 
 type Repository interface {
 	Create(ctx context.Context, b *Booking) (*Booking, error)
+	FindSimpleDTO(ctx context.Context, publicID string) (*commonDTO.SimpleBookingDTO, error)
 }
 
 type eventRow struct {
@@ -30,12 +33,26 @@ func NewGormRepository(db *gorm.DB, logger zerolog.Logger) *GormRepository {
 	}
 }
 
+func (r *GormRepository) FindSimpleDTO(ctx context.Context, publicID string) (*commonDTO.SimpleBookingDTO, error) {
+	var dto commonDTO.SimpleBookingDTO
+	if err := r.db.WithContext(ctx).Select("id, user_id, total_price AS amount").Where("public_id = ?", publicID).Take(dto).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrBookingNotFound
+		}
+		r.logger.Error().Err(err).
+			Str("booking_public_id", publicID).
+			Msg("find booking failed")
+		return nil, fmt.Errorf("%w: %v", ErrDB, err)
+	}
+	return &dto, nil
+}
+
 func (r *GormRepository) Create(ctx context.Context, b *Booking) (*Booking, error) {
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var ev eventRow
 		if err := tx.Table("events").
 			Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).
-			Select("id", "available_seats").
+			Select("id, available_seats").
 			Where("id = ?", b.EventID).
 			Take(&ev).Error; err != nil {
 			

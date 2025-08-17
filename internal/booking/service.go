@@ -6,37 +6,41 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/anrisys/quicket/internal/booking/dto"
+	bookingDTO "github.com/anrisys/quicket/internal/booking/dto"
+	commonDTO "github.com/anrisys/quicket/internal/dto"
 	"github.com/anrisys/quicket/pkg/errs"
 	"github.com/anrisys/quicket/pkg/types"
 	"github.com/anrisys/quicket/pkg/util"
 	"github.com/rs/zerolog"
 )
 
-type Service interface {
-	Create(ctx context.Context, req *dto.CreateBookingRequest, userID string) (*dto.BookingDTO, error)
+type ServiceInterface interface {
+	Create(ctx context.Context, req *bookingDTO.CreateBookingRequest, userID string) (*bookingDTO.BookingDTO, error)
 }
 
-type service struct {
+type Service struct {
 	repo Repository
 	events types.EventReader
 	users types.UserReader
+	payments types.SimulatePayment
 	logger zerolog.Logger
 }
 
 func NewService(repo Repository, 
 	events types.EventReader, 
 	logger zerolog.Logger,
-	users types.UserReader) *service {
-	return &service{
+	payments types.SimulatePayment,
+	users types.UserReader) *Service {
+	return &Service{
 		repo: repo,
 		events: events,
 		users: users,
+		payments: payments,
 		logger: logger,
 	}
 }
 
-func (s *service) Create(ctx context.Context, req *dto.CreateBookingRequest, userPublicID string) (*dto.BookingDTO, error) {
+func (s *Service) Create(ctx context.Context, req *bookingDTO.CreateBookingRequest, userPublicID string) (*bookingDTO.BookingDTO, error) {
 	log := s.logger.With().
 		Str("event_public_id", req.EventID).
 		Uint("seats", req.Seats).
@@ -77,17 +81,38 @@ func (s *service) Create(ctx context.Context, req *dto.CreateBookingRequest, use
 		}
 	}
 
+	// Payment simulation
+	bookData := commonDTO.SimulateBookingPayment{
+		Amount: persisted.TotalPrice,
+		BookingID: persisted.ID,
+		UserID: persisted.UserID,
+	}
+
+	s.payments.SimulatePayment(ctx, &bookData)
 	log.Info().
 		Str("booking_public_id", persisted.PublicID).
-		Uint("event_id", persisted.EventID).
-		Uint("user_id", persisted.UserID).
+		Msg("payment simulation triggered asynchronously")
+
+	log.Info().
+		Str("booking_public_id", persisted.PublicID).
 		Msg("Booking created")
 
 	bDTO := s.prepareBookingDTO(ctx, persisted, req.EventID, userPublicID)
 	return bDTO, nil
 }
 
-func (s *service) prepareBooking(ctx context.Context, eventID uint, userID int, seats uint) (*Booking, error) {
+func (s *Service) GetSimpleBookingDTO(ctx context.Context, publicID string) (*commonDTO.SimpleBookingDTO, error) {
+	dto, err := s.repo.FindSimpleDTO(ctx, publicID)
+	if err != nil {
+		if errors.Is(err, ErrBookingNotFound) {
+			return nil, errs.NewErrNotFound("booking not found")	
+		}
+		return nil, errs.ErrInternal
+	}
+	return dto, nil
+}
+
+func (s *Service) prepareBooking(ctx context.Context, eventID uint, userID int, seats uint) (*Booking, error) {
 	publicID, err := util.GeneratePublicID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("booking#create: generate public id: %w", err)
@@ -101,8 +126,8 @@ func (s *service) prepareBooking(ctx context.Context, eventID uint, userID int, 
 	}, nil
 }
 
-func (s *service) prepareBookingDTO(_ctx context.Context, booking *Booking, eventPublicID string, userPublicID string) *dto.BookingDTO {
-	return &dto.BookingDTO{
+func (s *Service) prepareBookingDTO(_ctx context.Context, booking *Booking, eventPublicID string, userPublicID string) *bookingDTO.BookingDTO {
+	return &bookingDTO.BookingDTO{
 		PublicID: booking.PublicID,
 		EventID: eventPublicID,
 		UserID: userPublicID,
