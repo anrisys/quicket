@@ -73,13 +73,14 @@ func ErrorHandler() gin.HandlerFunc {
 			message = appErr.Message
 		}
 
-		resp := gin.H{
-			"code":    code,
-			"message": message,
+		resp := errs.ErrorResponse{
+			Code: code,
+			Message: message,
+			Fields: fields,
 		}
-		if len(fields) > 0 {
-			resp["fields"] = fields
-		}
+		// if len(fields) > 0 {
+		// 	resp["fields"] = fields
+		// }
 
 		c.JSON(status, resp)
 		c.Abort()

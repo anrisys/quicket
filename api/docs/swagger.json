@@ -1,0 +1,460 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Event Booking and Management System API",
+        "title": "Quicket API",
+        "contact": {
+            "name": "Quicket Support",
+            "url": "https://github.com/anrisys/quicket",
+            "email": "your.email@example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/api/v1//login": {
+            "post": {
+                "description": "Authenticates a user and returns a JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public",
+                    "Auth"
+                ],
+                "summary": "Log in a user",
+                "parameters": [
+                    {
+                        "description": "User login data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginUserSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errs.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errs.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/events": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new event (Admin/Organizer only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Create new event",
+                "parameters": [
+                    {
+                        "description": "Event creation data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateEventSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/errs.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errs.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (role restriction)",
+                        "schema": {
+                            "$ref": "#/definitions/errs.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/events/bookings/:eventID": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new booking",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Create new booking",
+                "parameters": [
+                    {
+                        "description": "Event creation data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateBookingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateBookingSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/errs.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errs.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/register": {
+            "post": {
+                "description": "Creates a new user account with email and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public",
+                    "Users"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User Registration data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterUserSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errs.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/errs.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.BookingDTO": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "number_of_seats": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateBookingRequest": {
+            "type": "object",
+            "properties": {
+                "seats": {
+                    "description": "EventID string `json:\"event_id\" binding:\"required\"`",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CreateBookingSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "booking": {
+                    "$ref": "#/definitions/dto.BookingDTO"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "SUCCESS"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operation successful"
+                }
+            }
+        },
+        "dto.CreateEventRequest": {
+            "type": "object",
+            "required": [
+                "end_date",
+                "max_seats",
+                "start_date",
+                "title"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "max_seats": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "minLength": 3
+                }
+            }
+        },
+        "dto.CreateEventSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "SUCCESS"
+                },
+                "event": {
+                    "$ref": "#/definitions/dto.SimpleEventDTO"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operation successful"
+                }
+            }
+        },
+        "dto.LoginUserDTO": {
+            "type": "object",
+            "properties": {
+                "public_id": {
+                    "type": "string",
+                    "example": "user_123"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "jwt.token.here"
+                }
+            }
+        },
+        "dto.LoginUserRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "user"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "user": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.LoginUserSuccess": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "SUCCESS"
+                },
+                "data": {
+                    "$ref": "#/definitions/dto.LoginUserDTO"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operation successful"
+                }
+            }
+        },
+        "dto.RegisterUserRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "password_confirmation",
+                "user"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "password_confirmation": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "organizer",
+                        "admin"
+                    ]
+                },
+                "user": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RegisterUserSuccess": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "SUCCESS"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operation successful"
+                }
+            }
+        },
+        "dto.SimpleEventDTO": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string",
+                    "example": "2023-12-31T23:59:59Z"
+                },
+                "public_id": {
+                    "type": "string",
+                    "example": "evt_123"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2023-12-31T20:00:00Z"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Concert Night"
+                }
+            }
+        },
+        "errs.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "VALIDATION_ERROR"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/errs.FieldError"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Invalid input data"
+                }
+            }
+        },
+        "errs.FieldError": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

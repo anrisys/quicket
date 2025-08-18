@@ -14,7 +14,7 @@ import (
 
 type UserServiceInterface interface {
 	Register(ctx context.Context, req *userDTO.RegisterUserRequest) error
-	Login(ctx context.Context, req *userDTO.LoginUserRequest) (*userDTO.LoginUserResponse, error)
+	Login(ctx context.Context, req *userDTO.LoginUserRequest) (*userDTO.LoginUserDTO, error)
 	FindUserById(ctx context.Context, id int) (*userDTO.UserDTO, error)
 }
 
@@ -74,7 +74,7 @@ func (s *UserService) Register(ctx context.Context, req *userDTO.RegisterUserReq
 	return nil
 }
 
-func (s *UserService) Login(ctx context.Context, req *userDTO.LoginUserRequest) (*userDTO.LoginUserResponse, error) {
+func (s *UserService) Login(ctx context.Context, req *userDTO.LoginUserRequest) (*userDTO.LoginUserDTO, error) {
 	s.logger.Debug().Ctx(ctx).Str("email", req.Email).Msg("Attempt to login")
 
 	user, err := s.repo.FindByEmail(ctx, req.Email)
@@ -94,7 +94,7 @@ func (s *UserService) Login(ctx context.Context, req *userDTO.LoginUserRequest) 
 		return nil, fmt.Errorf("failed to generate JWT token: %w", err)
 	}
 
-	response := &userDTO.LoginUserResponse{
+	response := &userDTO.LoginUserDTO{
 		PublicID: user.PublicID,
 		Token: token,
 	}

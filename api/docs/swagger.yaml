@@ -1,0 +1,309 @@
+basePath: /api/v1
+definitions:
+  dto.BookingDTO:
+    properties:
+      event_id:
+        type: string
+      id:
+        type: string
+      number_of_seats:
+        type: integer
+      status:
+        type: string
+      user_id:
+        type: string
+    type: object
+  dto.CreateBookingRequest:
+    properties:
+      seats:
+        description: EventID string `json:"event_id" binding:"required"`
+        type: integer
+    type: object
+  dto.CreateBookingSuccessResponse:
+    properties:
+      booking:
+        $ref: '#/definitions/dto.BookingDTO'
+      code:
+        example: SUCCESS
+        type: string
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  dto.CreateEventRequest:
+    properties:
+      description:
+        maxLength: 2000
+        type: string
+      end_date:
+        type: string
+      max_seats:
+        type: integer
+      start_date:
+        type: string
+      title:
+        maxLength: 256
+        minLength: 3
+        type: string
+    required:
+    - end_date
+    - max_seats
+    - start_date
+    - title
+    type: object
+  dto.CreateEventSuccessResponse:
+    properties:
+      code:
+        example: SUCCESS
+        type: string
+      event:
+        $ref: '#/definitions/dto.SimpleEventDTO'
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  dto.LoginUserDTO:
+    properties:
+      public_id:
+        example: user_123
+        type: string
+      token:
+        example: jwt.token.here
+        type: string
+    type: object
+  dto.LoginUserRequest:
+    properties:
+      password:
+        minLength: 6
+        type: string
+      user:
+        type: string
+    required:
+    - password
+    - user
+    type: object
+  dto.LoginUserSuccess:
+    properties:
+      code:
+        example: SUCCESS
+        type: string
+      data:
+        $ref: '#/definitions/dto.LoginUserDTO'
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  dto.RegisterUserRequest:
+    properties:
+      password:
+        minLength: 6
+        type: string
+      password_confirmation:
+        type: string
+      role:
+        enum:
+        - user
+        - organizer
+        - admin
+        type: string
+      user:
+        type: string
+    required:
+    - password
+    - password_confirmation
+    - user
+    type: object
+  dto.RegisterUserSuccess:
+    properties:
+      code:
+        example: SUCCESS
+        type: string
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  dto.SimpleEventDTO:
+    properties:
+      end_date:
+        example: "2023-12-31T23:59:59Z"
+        type: string
+      public_id:
+        example: evt_123
+        type: string
+      start_date:
+        example: "2023-12-31T20:00:00Z"
+        type: string
+      title:
+        example: Concert Night
+        type: string
+    type: object
+  errs.ErrorResponse:
+    properties:
+      code:
+        example: VALIDATION_ERROR
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/errs.FieldError'
+        type: array
+      message:
+        example: Invalid input data
+        type: string
+    type: object
+  errs.FieldError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: your.email@example.com
+    name: Quicket Support
+    url: https://github.com/anrisys/quicket
+  description: Event Booking and Management System API
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Quicket API
+  version: "1.0"
+paths:
+  /api/v1//login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT token
+      parameters:
+      - description: User login data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LoginUserSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+      summary: Log in a user
+      tags:
+      - Public
+      - Auth
+  /api/v1/events:
+    post:
+      consumes:
+      - application/json
+      description: Create a new event (Admin/Organizer only)
+      parameters:
+      - description: Event creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateEventSuccessResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "403":
+          description: Forbidden (role restriction)
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create new event
+      tags:
+      - Events
+  /api/v1/events/bookings/:eventID:
+    post:
+      consumes:
+      - application/json
+      description: Create a new booking
+      parameters:
+      - description: Event creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateBookingSuccessResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create new booking
+      tags:
+      - Bookings
+  /api/v1/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with email and password
+      parameters:
+      - description: User Registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.RegisterUserSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Public
+      - Users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

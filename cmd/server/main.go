@@ -11,8 +11,28 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	swaggerFiles "github.com/swaggo/files"     // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
+// @title Quicket API
+// @version 1.0
+// @description Event Booking and Management System API
+
+// @contact.name Quicket Support
+// @contact.url https://github.com/anrisys/quicket
+// @contact.email your.email@example.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token
+
+// @host localhost:8080
+// @BasePath /api/v1
 func main() {
 	app, err := di.InitializeApp()
     if err != nil {
@@ -40,6 +60,8 @@ func main() {
     }
 	
 	router.Use(middleware.ZerologLogger(), gin.Recovery(), middleware.ErrorHandler())
+
+    router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
     registerRoutes(router, app)
     
     addr := fmt.Sprintf(":%s", app.Config.Server.Port)
@@ -50,10 +72,26 @@ func main() {
 }
 
 func registerRoutes(r *gin.Engine, app *di.App)  {
-    r.POST("/register", app.UserHandler.Register)
-    r.POST("/login", app.UserHandler.Login)
+    // r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+    
+    public := r.Group("/api/v1")
+    {
+        public.POST("/register", app.UserHandler.Register)
+        public.POST("/login", app.UserHandler.Login)
+    }
 
     protected := r.Group("/api/v1")
     protected.Use(middleware.JWTAuthMiddleware(app.Config.Security.JWTSecret))
-    protected.POST("/events", middleware.AuthorizedRole([]string{"admin", "oganizer"}))
+    {
+        events := protected.Group("/events")
+        events.Use(middleware.AuthorizedRole([]string{"admin", "organizer"}))
+        {
+            events.POST("", app.EventHandler.Create)
+        }
+        
+        bookings := protected.Group("/bookings")
+        {
+            bookings.POST(":eventID", app.BookingHandler.Create)
+        }
+    }
 }

@@ -21,6 +21,19 @@ func NewEventHandler(eventService EventServiceInterface, logger zerolog.Logger) 
 	}
 }
 
+// Create godoc
+// @Summary Create new event
+// @Description Create a new event (Admin/Organizer only)
+// @Tags Events
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateEventRequest true "Event creation data" 
+// @Success 201 {object} dto.CreateEventSuccessResponse
+// @Failure 400 {object} errs.ErrorResponse "Validation error"
+// @Failure 401 {object} errs.ErrorResponse "Unauthorized"
+// @Failure 403 {object} errs.ErrorResponse "Forbidden (role restriction)"
+// @Router /api/v1/events [post]
 func (h *EventHandler) Create(c *gin.Context) {
 	ctx := c.Request.Context()
 	publicID := c.GetString("publicID")
@@ -38,9 +51,18 @@ func (h *EventHandler) Create(c *gin.Context) {
 		c.Error(err)
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"code": "success",
-		"message": "Event created successfully",
-		"event": event,
-	})
+	response := dto.CreateEventSuccessResponse{
+		ResponseSuccess: dto.ResponseSuccess{
+			Code:    "SUCCESS",
+			Message: "Event created successfully",
+		},
+		Event: dto.SimpleEventDTO{
+			PublicID:  event.PublicID,
+			Title:     event.Title,
+			StartDate: event.StartDate,
+			EndDate:   event.EndDate,
+		},
+	}
+
+	c.JSON(http.StatusCreated, response)
 }

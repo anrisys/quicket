@@ -21,9 +21,22 @@ func NewHandler(svc ServiceInterface, logger zerolog.Logger) *Handler {
 	}
 }
 
+// Create godoc
+// @Summary Create new booking
+// @Description Create a new booking
+// @Tags Bookings
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateBookingRequest true "Event creation data" 
+// @Success 201 {object} dto.CreateBookingSuccessResponse
+// @Failure 400 {object} errs.ErrorResponse "Validation error"
+// @Failure 401 {object} errs.ErrorResponse "Unauthorized"
+// @Router /api/v1/events/bookings/:eventID [post]
 func (h *Handler) Create(c *gin.Context) {
 	ctx := c.Request.Context()
 	userPublicID := c.GetString("publicID")
+	eventID := c.Param("eventID")
 
 	var req *dto.CreateBookingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -33,15 +46,19 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	booking, err := h.svc.Create(ctx, req, userPublicID)
+	booking, err := h.svc.Create(ctx, req, userPublicID, eventID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"code": "success",
-		"message": "Booking created successfully",
-		"booking": booking,
-	})
+	response := dto.CreateBookingSuccessResponse{
+		ResponseSuccess: dto.ResponseSuccess{
+			Code: "SUCCESS",
+			Message: "Booking created successfully",
+		},
+		Booking: *booking,
+	}
+
+	c.JSON(http.StatusCreated, response)
 }

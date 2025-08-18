@@ -15,7 +15,7 @@ import (
 )
 
 type ServiceInterface interface {
-	Create(ctx context.Context, req *bookingDTO.CreateBookingRequest, userID string) (*bookingDTO.BookingDTO, error)
+	Create(ctx context.Context, req *bookingDTO.CreateBookingRequest, userID, eventID string) (*bookingDTO.BookingDTO, error)
 }
 
 type Service struct {
@@ -40,9 +40,9 @@ func NewService(repo Repository,
 	}
 }
 
-func (s *Service) Create(ctx context.Context, req *bookingDTO.CreateBookingRequest, userPublicID string) (*bookingDTO.BookingDTO, error) {
+func (s *Service) Create(ctx context.Context, req *bookingDTO.CreateBookingRequest, userPublicID, eventID string) (*bookingDTO.BookingDTO, error) {
 	log := s.logger.With().
-		Str("event_public_id", req.EventID).
+		Str("event_public_id", eventID).
 		Uint("seats", req.Seats).
 		Str("user_public_id", userPublicID).
 		Logger()
@@ -50,7 +50,7 @@ func (s *Service) Create(ctx context.Context, req *bookingDTO.CreateBookingReque
 	log.Info().Msg("Create booking request")
 	
 	log.Debug().Msg("Checking eventID exist or not")
-	ev, err := s.events.GetEventDateTimeAndSeats(ctx, req.EventID)
+	ev, err := s.events.GetEventDateTimeAndSeats(ctx, eventID)
 	if err != nil {
 		return nil, fmt.Errorf("booking service#create: %w", err)
 	}
@@ -97,7 +97,7 @@ func (s *Service) Create(ctx context.Context, req *bookingDTO.CreateBookingReque
 		Str("booking_public_id", persisted.PublicID).
 		Msg("Booking created")
 
-	bDTO := s.prepareBookingDTO(ctx, persisted, req.EventID, userPublicID)
+	bDTO := s.prepareBookingDTO(ctx, persisted, eventID, userPublicID)
 	return bDTO, nil
 }
 
