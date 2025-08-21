@@ -1,0 +1,18 @@
+# Env files
+.env 
+.eexample.env
+
+# Git & docs
+.git
+.gitignore
+README.md
+LICENSE
+
+# Swagger docs
+# api/docs/
+
+#Tests
+test/
+
+# Migration files
+# migration/
