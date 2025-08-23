@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  api:
+    container_name: quicket-api-test
+    command: ["go", "test", "./...", "-v"]
+    environment:
+      APP_ENV: test
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: quicket_test
+    depends_on:
+      - mysql
+    volumes: -.:/app
+      - go-mode:/go/pkg/mod
+      - go-cache:/root/.cache/go-build
+  mysql:
+    container_name: quicket-mysql-test
+    environment:
+      - MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      - MYSQL_DATABASE: quicket_test
+    ports: []
+    volumes: []
+  migrate:
+    container_name: quicket-migrate-test
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "mysql://${DB_USER}:${DB_PASSWORD}@tcp(mysql:3306)/quicket_test",
+        "up",
+      ]
+    depends_on:
+      - mysql
+    restart: no
