@@ -40,8 +40,6 @@ func (h *EventHandler) Create(c *gin.Context) {
 
 	var req *dto.CreateEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		// fieldsErrors := errs.ExtractValidationErrors(err)
-		// validateErr := errs.NewValidationError("Invalid login data", fieldsErrors, err)
 		validationErr := errs.NewValidationError("Invalid login data", err)
 		c.Error(validationErr)
 		return
@@ -50,6 +48,7 @@ func (h *EventHandler) Create(c *gin.Context) {
 	event, err := h.EventService.Create(ctx, req, publicID)
 	if err != nil {
 		c.Error(err)
+		return
 	}
 
 	response := dto.CreateEventSuccessResponse{

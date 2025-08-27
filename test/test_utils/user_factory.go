@@ -24,7 +24,7 @@ func CreateTestUser(cfg *config.AppConfig) (*user.User, error) {
 		PublicID: publicID,
 		Email: "user@example.com",
 		Password: hashedPassword,
-		Role: "user",
+		Role: "admin",
 	}
 	gormDB,err := database.MySQLDB(cfg)
 	if err != nil {

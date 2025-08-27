@@ -7,5 +7,5 @@ type ResponseSuccess struct {
 
 type CreateEventSuccessResponse struct {
 	ResponseSuccess `json:",inline"`
-	Event           SimpleEventDTO `json:",inline"`
+	Event           SimpleEventDTO `json:"event"`
 }

@@ -1,30 +1,48 @@
 package middleware
 
 import (
+	"net/http"
+	"strings"
+
+	"github.com/anrisys/quicket/pkg/errs"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 func JWTAuthMiddleware(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
-		if tokenString == "" {
-			c.AbortWithStatusJSON(401, gin.H{"error": "authorization header missing"})
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			resp := errs.ErrorResponse{
+				Code: "UNAUTHORIZED",
+				Message: "authorization header missing",
+			}
+			c.AbortWithStatusJSON(http.StatusUnauthorized, resp)
 			return
 		}
 
-		// token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
-		// 	if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok{
-		// 		return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-		// 	}
-		// 	return []byte(secret), nil
-		// })
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+			resp := errs.ErrorResponse{
+				Code: "UNAUTHORIZED",
+				Message: "invalid authorization header format",
+			}
+			c.AbortWithStatusJSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		tokenString := parts[1]
+
 		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
-			return secret, nil
+			return []byte(secret), nil
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
 		if err != nil || !token.Valid{
-			c.AbortWithStatusJSON(401, gin.H{"error": "invalid token"})
+			resp := errs.ErrorResponse{
+				Code: "UNAUTHORIZED",
+				Message: "invalid token",
+			}
+			c.AbortWithStatusJSON(http.StatusUnauthorized, resp)
 			return
 		}
 

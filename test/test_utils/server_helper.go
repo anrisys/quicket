@@ -1,4 +1,4 @@
-package integration_test
+package test_utils
 
 import (
 	"bytes"
@@ -37,7 +37,7 @@ func (ts *TestServer) URL() string {
 	return ts.Server.URL
 }
 
-func (ts *TestServer) MakeRequest(method, path, token string, body interface{}) (*http.Response, error) {
+func (ts *TestServer) MakeRequest(method, path, token string, body any) (*http.Response, error) {
     var buf bytes.Buffer
     if body != nil {
         if err := json.NewEncoder(&buf).Encode(body); err != nil {

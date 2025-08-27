@@ -1,4 +1,4 @@
-package integration_test
+package integration
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestLogin(t *testing.T) {
-	s := NewTestServer()
+	s := test_utils.NewTestServer()
 	defer s.Close()
 
 	// Seed user test data
@@ -18,7 +18,7 @@ func TestLogin(t *testing.T) {
 		t.Fatalf("failed to seed user data %v", err)
 	}
 
-	defer test_utils.CleanupTestUser(s.App.Config, "user@example.com")
+	defer test_utils.CleanupTestUser(s.App.Config, testUser.Email)
 
 	tests := []struct {
 		name                 string
@@ -112,7 +112,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	s := NewTestServer()
+	s := test_utils.NewTestServer()
 	defer s.Close()
 
 	// Seed user for duplicate case

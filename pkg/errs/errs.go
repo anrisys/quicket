@@ -99,7 +99,7 @@ func NewValidationError(message string, internalErr ...error) *AppError {
 func NewConflictError(message string, internalErr ...error) *AppError {
 	ae := &AppError{
 		Status:  http.StatusConflict,
-		Code:    "CONFLICT",
+		Code:    "CONFLICT_ERROR",
 		Message: message,
 		Details: nil,
 	}
