@@ -13,6 +13,7 @@ type AppError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Err 	error `json:"-"`
+	Details any `json:"details,omitempty"`
 }
 
 func (e *AppError) Error() string {
@@ -57,6 +58,7 @@ func NewAppError(status int, code, message string, internalErr ...error) *AppErr
 		Status:  status,
 		Code:    code,
 		Message: message,
+		Details: nil,
 	}
 	if len(internalErr) > 0 {
 		ae.Err = internalErr[0] // Only take the first error if multiple are passed
@@ -64,35 +66,86 @@ func NewAppError(status int, code, message string, internalErr ...error) *AppErr
 	return ae
 }
 
-func NewValidationError(message string, fields []FieldError, internalErr ...error) *ValidationError {
-	ve := &ValidationError{
-		AppError: AppError{
-			Status:  http.StatusBadRequest, // Validation errors are typically Bad Request
-			Code:    "VALIDATION_ERROR",
-			Message: message,
-		},
-		Fields: fields,
+func NewValidationError(message string, internalErr ...error) *AppError {
+	var details any
+	var fieldErrors []FieldError
+	
+	// Extract validation errors if provided
+	if len(internalErr) > 0 && internalErr[0] != nil {
+		fieldErrors = ExtractValidationErrors(internalErr[0])
+	}
+	
+	// Only include details if we have field errors
+	if len(fieldErrors) > 0 {
+		details = fieldErrors
+	} else {
+		details = nil // omitempty will hide this in JSON
+	}
+	
+	ae := &AppError{
+		Status:  http.StatusBadRequest,
+		Code:    "VALIDATION_ERROR",
+		Message: message,
+		Details: details,
+	}
+	
+	if len(internalErr) > 0 {
+		ae.Err = internalErr[0]
+	}
+	
+	return ae
+}
+
+func NewConflictError(message string, internalErr ...error) *AppError {
+	ae := &AppError{
+		Status:  http.StatusConflict,
+		Code:    "CONFLICT",
+		Message: message,
+		Details: nil,
 	}
 	if len(internalErr) > 0 {
-		ve.Err = internalErr[0]
+		ae.Err = internalErr[0]
 	}
-	return ve
+	return ae
 }
 
-func NewConflictError(message string) *AppError {
-    return NewAppError(http.StatusConflict, "CONFLICT", message, nil)
+func NewServiceUnavailableError(message string, internalErr ...error) *AppError {
+    ae := &AppError{
+		Status:  http.StatusServiceUnavailable,
+		Code:    "SERVICE_UNAVAILABLE",
+		Message: message,
+		Details: nil,
+	}
+	if len(internalErr) > 0 {
+		ae.Err = internalErr[0]
+	}
+	return ae
 }
 
-func NewServiceUnavailableError(message string) *AppError {
-    return NewAppError(http.StatusServiceUnavailable, "SERVICE_UNAVAILABLE", message, nil) 
+func NewInternalError(message string, internalErr ...error) *AppError {
+	ae := &AppError{
+		Status:  http.StatusInternalServerError,
+		Code:    "INTERNAL_ERROR",
+		Message: message,
+		Details: nil,
+	}
+	if len(internalErr) > 0 {
+		ae.Err = internalErr[0]
+	}
+	return ae
 }
 
-func NewInternalError(message string) *AppError {
-    return NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", message, nil)
-}
-
-func NewErrNotFound(resource string) *AppError {
-    return NewAppError(http.StatusNotFound, "NOT_FOUND", fmt.Sprintf("%s not found", resource), nil)
+func NewErrNotFound(resource string, internalErr ...error) *AppError {
+    	ae := &AppError{
+		Status:  http.StatusNotFound,
+		Code:    "NOT_FOUND",
+		Message: fmt.Sprintf("%s not found", resource),
+		Details: nil,
+	}
+	if len(internalErr) > 0 {
+		ae.Err = internalErr[0]
+	}
+	return ae
 }
 
 var (

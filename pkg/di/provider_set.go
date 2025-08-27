@@ -26,6 +26,7 @@ var (
 	)
 	SecuritySet = wire.NewSet(
 		security.NewAccountSecurity,
+		wire.Bind(new(security.AccountSecurityInterface), new(*security.AccountSecurity)),
 	)
 	TokenSet = wire.NewSet(
 		token.NewGenerator,
@@ -37,7 +38,6 @@ var (
 		LoggerSet,
 		SecuritySet,
 		TokenSet,
-		wire.Bind(new(security.AccountSecurityInterface), new(*security.AccountSecurity)),
 	)
 	AppProviderSet = wire.NewSet(
 		CoreSet, 

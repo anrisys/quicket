@@ -12,7 +12,7 @@ import (
 
 func MySQLDB(cfg *config.AppConfig) (*gorm.DB, error) {
 	cfgDB := cfg.Database
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True",
 		cfgDB.DBUser,
 		cfgDB.DBPassword,
 		cfgDB.DBHost,

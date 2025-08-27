@@ -69,7 +69,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*User, 
 	var user User
 	err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
 	if err != nil {
-		r.logger.Error().Ctx(ctx).Msg("DB operation failed")
+		r.logger.Error().Err(err).Ctx(ctx).Msg("DB operation failed")
 
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):

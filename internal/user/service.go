@@ -79,14 +79,12 @@ func (s *UserService) Login(ctx context.Context, req *userDTO.LoginUserRequest) 
 
 	user, err := s.repo.FindByEmail(ctx, req.Email)
 	if err != nil {
-		return nil, fmt.Errorf("user service: login: %w", err)
+		return nil, errs.NewValidationError("email or password is wrong", err)
 	}
 
 	passwordMatch := s.accountSecurity.CheckPasswordHash(ctx, req.Password, user.Password)
 	if !passwordMatch {
-		return nil, fmt.Errorf("email or password is wrong %w",
-			errs.NewAppError(400, "INVALID_DATA", "email or password is wrong"),
-		)
+		return nil, errs.NewValidationError("email or password is wrong", err)
 	}
 
 	token, err := s.tokenGenerator.GenerateToken(user.PublicID, user.Role)

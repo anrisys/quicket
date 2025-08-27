@@ -13,29 +13,29 @@ type ServerConfig struct {
 
 type DBConfig struct {
 	DBHost     string `mapstructure:"DB_HOST"`
-	DBPort     string `mapstructure:"DB_PORT"`
-	DBUser     string `mapstructure:"DB_USER"`
-	DBPassword string `mapstructure:"DB_PASSWORD"`
-	DBName     string `mapstructure:"DB_NAME"`
+    DBPort     string `mapstructure:"DB_PORT"`
+    DBUser     string `mapstructure:"DB_USER"`
+    DBPassword string `mapstructure:"DB_PASSWORD"`
+    DBName     string `mapstructure:"DB_NAME"`
 }
 
 type LogConfig struct {
-	Level  string `mapstructure:"LOG_LEVEL"`
-	Pretty bool   `mapstructure:"LOG_PRETTY"`
+	Level  string `mapstructure:"log_level"`
+	Pretty bool   `mapstructure:"log_pretty"`
 }
 
 type SecurityConfig struct {
-	BcryptCost int `mapstructure:"BCRYPT_COST"`
-	JWTSecret string `mapstructure:"JWT_SECRET"`
-	JWTIssuer string `mapstructure:"JWT_ISSUER"`
-	JWTExpiry time.Duration `mapstructure:"JWT_EXPIRY"`
+	BcryptCost int `mapstructure:"bcrypt_cost"`
+	JWTSecret string `mapstructure:"jwt_secret"`
+	JWTIssuer string `mapstructure:"jwt_issuer"`
+	JWTExpiry time.Duration `mapstructure:"jwt_expiry"`
 }
 
 type AppConfig struct {
 	Server   ServerConfig
 	Logging  LogConfig
-	Database DBConfig
-	Security SecurityConfig
+	Database DBConfig       `mapstructure:",squash"`
+	Security SecurityConfig `mapstructure:",squash"`
 }
 
 func DefaultConfig() *AppConfig {
@@ -43,15 +43,18 @@ func DefaultConfig() *AppConfig {
 		Server:  ServerConfig{Port: "8080"},
 		Logging: LogConfig{Level: "debug", Pretty: true},
 		Security: SecurityConfig{BcryptCost: 14},
+		Database: DBConfig{},
 	}
 }
 
 func Load() (*AppConfig, error) {
 	config := DefaultConfig()
 
-	viper.SetConfigFile(".env")
+	viper.SetConfigName(".env")
+	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
-	viper.AddConfigPath("./config")
+	viper.AddConfigPath("..")
+	viper.AddConfigPath("../..")
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -68,6 +71,10 @@ func Load() (*AppConfig, error) {
 
 	if config.Database == (DBConfig{}) {
 		log.Fatal("Database has not been set yet")
+	}
+
+	if config.Security.BcryptCost == 0 {
+		log.Fatal("BCRYPT Cose has not been set yet")
 	}
 
 	if config.Security.JWTSecret == "" {
