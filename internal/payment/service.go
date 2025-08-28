@@ -24,7 +24,7 @@ type PaymentJob struct {
 	PublicID string
 }
 
-type PaymentServiceInterface interface {}
+type PaymentServiceInterface any
 
 type PaymentService struct {
 	r *GormRepository

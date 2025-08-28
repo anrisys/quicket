@@ -7,5 +7,5 @@ type ResponseSuccess struct {
 
 type CreateBookingSuccessResponse struct {
 	ResponseSuccess `json:",inline"`
-	Booking         BookingDTO `json:",inline"`
+	Booking         BookingDTO `json:"booking"`
 }

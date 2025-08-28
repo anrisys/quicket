@@ -34,7 +34,7 @@ func TestCreateEvent(t *testing.T) {
 	dayAfterTomorrow := tomorrow.Add(24 * time.Hour)
 
 	tests := []struct {
-		name                 string
+		name                string
 		token               string
 		payload             map[string]any
 		expectedStatus      int
@@ -47,7 +47,7 @@ func TestCreateEvent(t *testing.T) {
 			name: "create event success",
 			token: tokenTest,
 			payload: map[string]any{
-				"title": "Tech Conference 2024",
+				"title": "Tech Conference 2025",
 				"start_date": tomorrow.Format(time.RFC3339),
 				"end_date": dayAfterTomorrow.Format(time.RFC3339),
 				"description": "Annual technology conference",
@@ -55,26 +55,26 @@ func TestCreateEvent(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 			expectedResponse: map[string]any{
-				"code":    "SUCCESS",
+				"code":"SUCCESS",
 				"message": "Event created successfully",
 				"public_id": "", // Will check if not empty
-				"title":   "Tech Conference 2024",
+				"title": "Tech Conference 2025",
 			},
 			expectError: false,
 			description: "Valid event creation should succeed",
 		},
 		{
-			name:   "create event without description",
+			name: "create event without description",
 			token:  tokenTest,
 			payload: map[string]any{
-				"title":      "Music Concert",
+				"title": "Music Concert",
 				"start_date": tomorrow.Format(time.RFC3339),
-				"end_date":   dayAfterTomorrow.Format(time.RFC3339),
-				"max_seats":  500,
+				"end_date": dayAfterTomorrow.Format(time.RFC3339),
+				"max_seats": 500,
 			},
 			expectedStatus: http.StatusCreated,
 			expectedResponse: map[string]any{
-				"code":    "SUCCESS",
+				"code": "SUCCESS",
 				"message": "Event created successfully",
 			},
 			expectError: false,
@@ -83,34 +83,34 @@ func TestCreateEvent(t *testing.T) {
 		
 		// AUTHENTICATION FAILURES
 		{
-			name:   "create event unauthorized - no token",
+			name: "create event unauthorized - no token",
 			token:  "",
 			payload: map[string]any{
-				"title":      "Unauthorized Event",
+				"title": "Unauthorized Event",
 				"start_date": tomorrow.Format(time.RFC3339),
-				"end_date":   dayAfterTomorrow.Format(time.RFC3339),
-				"max_seats":  50,
+				"end_date": dayAfterTomorrow.Format(time.RFC3339),
+				"max_seats": 50,
 			},
 			expectedStatus: http.StatusUnauthorized,
 			expectedResponse: map[string]any{
-				"code":    "UNAUTHORIZED",
+				"code": "UNAUTHORIZED",
 				"message": "Authentication required",
 			},
 			expectError: true,
 			description: "Should reject request without authentication token",
 		},
 		{
-			name:   "create event unauthorized - invalid token",
-			token:  "invalid-token-here",
+			name: "create event unauthorized - invalid token",
+			token: "invalid-token-here",
 			payload: map[string]any{
-				"title":      "Invalid Token Event",
+				"title": "Invalid Token Event",
 				"start_date": tomorrow.Format(time.RFC3339),
-				"end_date":   dayAfterTomorrow.Format(time.RFC3339),
+				"end_date": dayAfterTomorrow.Format(time.RFC3339),
 				"max_seats":  50,
 			},
 			expectedStatus: http.StatusUnauthorized,
 			expectedResponse: map[string]any{
-				"code":    "UNAUTHORIZED",
+				"code": "UNAUTHORIZED",
 				"message": "Invalid token",
 			},
 			expectError: true,
@@ -118,68 +118,68 @@ func TestCreateEvent(t *testing.T) {
 		},
 		// VALIDATION FAILURES
 		{
-			name:   "create event failed - title too short",
+			name: "create event failed - title too short",
 			token:  tokenTest,
 			payload: map[string]any{
-				"title":      "ab", // Too short
+				"title": "ab", // Too short
 				"start_date": tomorrow.Format(time.RFC3339),
-				"end_date":   dayAfterTomorrow.Format(time.RFC3339),
+				"end_date": dayAfterTomorrow.Format(time.RFC3339),
 				"max_seats":  100,
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedResponse: map[string]any{
-				"code":    "VALIDATION_ERROR",
+				"code":  "VALIDATION_ERROR",
 				"message": "Invalid request data",
 			},
 			expectError: true,
 			description: "Should reject event with title less than 3 characters",
 		},
 		{
-			name:   "create event failed - start date in past",
+			name: "create event failed - start date in past",
 			token:  tokenTest,
 			payload: map[string]any{
-				"title":      "Past Event",
+				"title": "Past Event",
 				"start_date": time.Now().Add(-24 * time.Hour).Format(time.RFC3339), // Yesterday
-				"end_date":   tomorrow.Format(time.RFC3339),
+				"end_date": tomorrow.Format(time.RFC3339),
 				"max_seats":  100,
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedResponse: map[string]any{
-				"code":    "VALIDATION_ERROR",
+				"code": "VALIDATION_ERROR",
 				"message": "Invalid request data",
 			},
 			expectError: true,
 			description: "Should reject event with start date in the past",
 		},
 		{
-			name:   "create event failed - end date before start date",
-			token:  tokenTest,
+			name: "create event failed - end date before start date",
+			token: tokenTest,
 			payload: map[string]any{
-				"title":      "Invalid Dates Event",
+				"title": "Invalid Dates Event",
 				"start_date": dayAfterTomorrow.Format(time.RFC3339),
-				"end_date":   tomorrow.Format(time.RFC3339), // End before start
-				"max_seats":  100,
+				"end_date": tomorrow.Format(time.RFC3339), // End before start
+				"max_seats": 100,
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedResponse: map[string]any{
-				"code":    "VALIDATION_ERROR",
+				"code": "VALIDATION_ERROR",
 				"message": "Invalid request data",
 			},
 			expectError: true,
 			description: "Should reject event with end date before start date",
 		},
 		{
-			name:   "create event failed - zero seats",
+			name: "create event failed - zero seats",
 			token:  tokenTest,
 			payload: map[string]any{
-				"title":      "Zero Seats Event",
+				"title": "Zero Seats Event",
 				"start_date": tomorrow.Format(time.RFC3339),
 				"end_date":   dayAfterTomorrow.Format(time.RFC3339),
 				"max_seats":  0, // Invalid
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedResponse: map[string]any{
-				"code":    "VALIDATION_ERROR",
+				"code": "VALIDATION_ERROR",
 				"message": "Invalid request data",
 			},
 			expectError: true,
@@ -187,7 +187,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		// DUPLICATE TITLE
 		{
-			name:   "create event failed - duplicate title",
+			name: "create event failed - duplicate title",
 			token:  tokenTest,
 			payload: map[string]any{
 				"title": duplicateTitle,
@@ -197,7 +197,7 @@ func TestCreateEvent(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 			expectedResponse: map[string]any{
-				"code":    "CONFLICT_ERROR",
+				"code": "CONFLICT_ERROR",
 				"message": "event with this title already exists",
 			},
 			expectError: true,

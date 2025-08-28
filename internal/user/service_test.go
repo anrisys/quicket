@@ -65,9 +65,9 @@ func (m *MockUserRepo) FindByPublicID(ctx context.Context, publicID string) (*Us
 	return args.Get(0).(*User), args.Error(1)
 }
 
-func (m *MockUserRepo) GetUserID(ctx context.Context, publicID string) (*int, error) {
+func (m *MockUserRepo) GetUserID(ctx context.Context, publicID string) (*uint, error) {
 	args := m.Called(ctx, publicID)
-	return args.Get(0).(*int), args.Error(1)
+	return args.Get(0).(*uint), args.Error(1)
 }
 
 func (m *MockGenerator) GenerateToken(publicID, role string) (string, error) {

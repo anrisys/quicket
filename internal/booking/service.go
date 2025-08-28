@@ -12,6 +12,7 @@ import (
 	"github.com/anrisys/quicket/pkg/types"
 	"github.com/anrisys/quicket/pkg/util"
 	"github.com/rs/zerolog"
+	"gorm.io/gorm"
 )
 
 type ServiceInterface interface {
@@ -52,6 +53,9 @@ func (s *Service) Create(ctx context.Context, req *bookingDTO.CreateBookingReque
 	log.Debug().Msg("Checking eventID exist or not")
 	ev, err := s.events.GetEventDateTimeAndSeats(ctx, eventID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.NewErrNotFound("event")
+		}
 		return nil, fmt.Errorf("booking service#create: %w", err)
 	}
 	now := time.Now()
@@ -112,17 +116,20 @@ func (s *Service) GetSimpleBookingDTO(ctx context.Context, publicID string) (*co
 	return dto, nil
 }
 
-func (s *Service) prepareBooking(ctx context.Context, eventID uint, userID int, seats uint) (*Booking, error) {
+func (s *Service) prepareBooking(ctx context.Context, eventID uint, userID uint, seats uint) (*Booking, error) {
 	publicID, err := util.GeneratePublicID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("booking#create: generate public id: %w", err)
 	}
+
+	expiredAt := time.Now().Add(5 * time.Minute)
 
 	return &Booking{
 		PublicID: publicID,
 		EventID: eventID,
 		UserID: uint(userID),
 		Seats: seats,
+		ExpiredAt: expiredAt,
 	}, nil
 }
 
@@ -133,5 +140,6 @@ func (s *Service) prepareBookingDTO(_ctx context.Context, booking *Booking, even
 		UserID: userPublicID,
 		Seats: booking.Seats,
 		Status: booking.Status,
+		ExpiredAt: booking.ExpiredAt,
 	}
 }

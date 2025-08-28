@@ -126,7 +126,7 @@ func (s *UserService) FindUserByPublicID(ctx context.Context, publicID string) (
 	}, nil
 }
 
-func (s *UserService) GetUserID(ctx context.Context, publicID string) (*int, error) {
+func (s *UserService) GetUserID(ctx context.Context, publicID string) (*uint, error) {
 	return s.repo.GetUserID(ctx, publicID)
 }
 

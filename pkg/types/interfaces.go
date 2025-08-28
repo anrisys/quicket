@@ -7,7 +7,7 @@ import (
 )
 
 type UserReader interface {
-	GetUserID(ctx context.Context, publicID string) (*int, error)
+	GetUserID(ctx context.Context, publicID string) (*uint, error)
 	FindUserByPublicID(ctx context.Context, publicID string) (*commonDTO.UserDTO, error)
 }
 
