@@ -156,7 +156,7 @@ func TestRegister(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 			expectedResponseBody: map[string]any{
-				"code": "CONFLICT",
+				"code": "CONFLICT_ERROR",
 				"message": "email already registered",
 			},
 			expectError: true,

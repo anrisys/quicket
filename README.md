@@ -12,9 +12,11 @@ An event and booking management API built in Go, designed to demonstrate a modul
 
 - Booking System: Authenticated endpoints for booking events.
 
-- Payments Simulation: A dedicated payment simulation endpoint to demonstrate a full transaction flow.
+- Payments Simulation: A dedicated payment simulation service to demonstrate a full transaction flow.
 
 - Authentication & Authorization: Utilizes JWT for secure access to protected routes with role-based checks.
+
+- Containerization: Using docker for isolation practice in development and testing stage
 
 ## 🛠️ Technologies Used
 
@@ -40,6 +42,8 @@ An event and booking management API built in Go, designed to demonstrate a modul
 
 - Swagger : For API docs
 
+- Testify : For endpoint integration tests
+
 ## 📁 Project Structure
 
 The project is structured following the principles of a modular monolith, which allows for a clean separation of business logic and a clear path for future migration to a microservices architecture.
@@ -56,30 +60,39 @@ The project is structured following the principles of a modular monolith, which 
 
   ```
   quicket/
-  ├──  api/               # API contracts or Swagger/OpenAPI
-  │ └── docs/             # Generated API docs (Swagger)
-  ├── cmd/                # Application entrypoints
+  ├──  api/                         # API contracts or Swagger/OpenAPI
+  │ └── docs/                       # Generated API docs (Swagger)
+  ├── cmd/                          # Application entrypoints
   │ └── server/
-  │ └── main.go           # Main app entrypoint
-  ├── internal/           # Business logic (domain-driven design)
-  │ ├── booking/          # Booking domain (handler, service, repo)
-  │ ├── dto/              # Request/response DTOs
-  │ ├── event/            # Event domain
-  │ ├── payment/          # Payment domain
-  │ ├── user/             # User domain
-  │ └── validations/      # Custom input validation
-  ├── migration/          # Database migration files
-  ├── pkg/                # Shared libraries/utilities
-  │ ├── config/           # Viper-based config loader
-  │ ├── database/         # Database connection + GORM
-  │ ├── di/               # Dependency injection with Wire
-  │ ├── middleware/       # Gin middlewares (JWT, roles)
-  │ ├── security/         # Password hashing
-  │ ├── token/            # JWT utilities
-  │ ├── types/            # Shared enums/types
-  │ └── util/             # Helper utilities
-  ├── .env                # Local environment variables
-  ├── .example.env        # Example env file
+  │ └── main.go                     # Main app entrypoint
+  ├── internal/                     # Business logic (domain-driven design)
+  │ ├── booking/                    # Booking domain (handler, service, repo)
+  │ ├── dto/                        # Request/response DTOs
+  │ ├── event/                      # Event domain
+  │ ├── payment/                    # Payment domain
+  │ ├── user/                       # User domain
+  │ └── validations/                # Custom input validation
+  ├── migration/                    # Database migration files
+  ├── pkg/                          # Shared libraries/utilities
+  │ ├── config/                     # Viper-based config loader
+  │ ├── database/                   # Database connection + GORM
+  │ ├── di/                         # Dependency injection with Wire
+  │ ├── middleware/                 # Gin middlewares (JWT, roles)
+  │ ├── security/                   # Password hashing
+  │ ├── token/                      # JWT utilities
+  │ ├── types/                      # Shared enums/types
+  │ └── util/                       # Helper utilities
+  ├── tests/                        # Integration test for endpoints
+  │ ├── integration/                # Integration test endpoint per domain/endpoints
+  │ └── test_utils/                 # Helper utilities for integration test
+  ├── .env                          # Local environment variables
+  ├── .example.env                  # Example env file
+  ├── .air.tomi                     # Configuration for auto-reload
+  ├── .dockerignore
+  ├── docker-compose.dev.yml        # Multi-image set up for development stage
+  ├── docker-compose.test.yml       # Multi-image set up for testing
+  ├── Dockerfile.dev                # App image build up instructions for development stage
+  ├── Dockerfile.test               # App image build up instructions for testing
   ├── go.mod
   └── go.sum
   ```
@@ -144,15 +157,13 @@ Protected (Requires JWT)
 
 - `POST /api/v1/bookings`: Create a new booking. (All authenticated users)
 
-- `POST /api/v1/payments`: Simulate a payment. (All authenticated users)
-
 ## 🔮 Next Steps
 
 - Split into microservices (user-service, event-service, booking-service, payment-service)
 
 - Add Redis for caching / async jobs
 
-- Use API Gateway (Kong)
+- Use API Gateway (NGINX)
 
 ## License
 

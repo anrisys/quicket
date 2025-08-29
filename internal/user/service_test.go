@@ -125,7 +125,7 @@ func TestUserService_Register(t *testing.T) {
 		assert.True(t, errors.As(err, &appErr), "Error should be of type *errs.AppError")
 		assert.Equal(t, "email already registered", appErr.Message)
 		assert.Equal(t, http.StatusConflict, appErr.Status)
-		assert.Equal(t, "CONFLICT", appErr.Code) 
+		assert.Equal(t, "CONFLICT_ERROR", appErr.Code) 
 		mockRepo.AssertNotCalled(t, "Create")
 	})
 }
@@ -154,6 +154,9 @@ func TestUserService_Login(t *testing.T) {
 		mockRepo.On("FindByEmail", ctx, validRequest.Email).Return(testUser, nil)
 		mockSecurity.On("CheckPasswordHash", ctx, validRequest.Password, hashedPass).
 			Return(true)
+
+		mockGenerator.On("GenerateToken", testUser.PublicID, testUser.Role).
+		Return("mock_token_string", nil)
 
 		userDTO, err := service.Login(ctx, validRequest)
 
