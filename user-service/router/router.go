@@ -58,6 +58,7 @@ func registerRoutes(r *gin.Engine, app *di.UserServiceApp) {
 	protected := r.Group("/api/v1/users")
 	protected.Use(middleware.JWTAuthMiddleware(app.Config.Security.JWTSecret))
 	{
+		protected.GET("/:id", app.Handler.GetUserByID)
 		protected.GET("/:publicID/primary-id", app.Handler.GetUserPrimaryID)
 		protected.GET("/public/:publicID", app.Handler.GetUserByPublicID)
 	}

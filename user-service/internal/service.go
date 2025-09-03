@@ -104,11 +104,12 @@ func (s *UserService) Login(ctx context.Context, req *LoginUserRequest) (*LoginU
 
 func (s *UserService) FindUserById(ctx context.Context, id int) (*UserDTO, error) {
 	s.logger.Debug().Ctx(ctx).Int("user id", id).Msg("Attempt to login")
-
 	user, err := s.repo.FindById(ctx, id)
-
 	if err != nil {
-		return nil, fmt.Errorf("user service: findById  %w", err)
+		if errors.Is(err, ErrUserNotFound) {
+			return nil, errs.NewErrNotFound("user")
+		}
+		return nil, errs.ErrInternal
 	}
 
 	return s.toUserDTO(user), nil
@@ -122,12 +123,7 @@ func (s *UserService) FindUserByPublicID(ctx context.Context, publicID string) (
 		}
 		return nil, errs.ErrInternal
 	}
-	return &UserDTO{
-		ID:       int(user.ID),
-		PublicID: user.PublicID,
-		Email:    user.Email,
-		Role:     user.Role,
-	}, nil
+	return s.toUserDTO(user), nil
 }
 
 func (s *UserService) GetUserPrimaryID(ctx context.Context, publicID string) (*uint, error) {

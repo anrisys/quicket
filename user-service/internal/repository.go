@@ -53,14 +53,16 @@ func (r *UserRepository) FindById(ctx context.Context, id int) (*User, error)  {
 	user := &User{}
 	err := r.db.WithContext(ctx).First(user, id).Error
 	if err != nil {
-		switch {
-			case errors.Is(err, gorm.ErrRecordNotFound):
-				return nil, errs.NewErrNotFound("user");
-			case isConnectionError(err):
-				return nil, errs.NewServiceUnavailableError("database unavailable")
-			default:
-            	return nil, errs.NewAppError(500, "DB_OPERATION_FAILED", "Database operation failed", err)
-        }
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrUserNotFound
+		}
+		r.logger.Error().Err(err).
+			Int("id", id).
+			Msg("failed to find user")
+		if isConnectionError(err) {
+			return nil, errs.NewServiceUnavailableError("database unavailable")
+		}
+		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
 	return user, nil
 }

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/anrisys/quicket/user-service/pkg/errs"
 	"github.com/gin-gonic/gin"
@@ -125,6 +126,58 @@ func (h *UserHandler) GetUserPrimaryID(c *gin.Context)  {
 
 // Get user
 // @Summary Retrieve user by ID
+// @Description Retrieve user's data from user's id
+// @Tags User
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param publicID path string true "User ID"
+// @Success 200 {object} GetUserByIDSuccess
+// @Failure 400 {object} errs.ErrorResponse "Validation error"
+// @Failure 401 {object} errs.ErrorResponse "Unauthorized"
+// @Failure 404 {object} errs.ErrorResponse "User not found"
+// @Failure 500 {object} errs.ErrorResponse "Internal server error"
+// @Router /api/v1/users/{id} [get]
+func (h *UserHandler) GetUserByID(c *gin.Context)  {
+	idParam := c.Param("id")
+
+    id, err := strconv.Atoi(idParam)
+    if err != nil {
+		response := errs.ErrorResponse{
+			Code: "VALIDATION_ERROR",
+			Message: "Invalid user ID format. User id must be a valid integer",
+		}
+        c.JSON(http.StatusBadRequest, response)
+        return
+    }
+    
+    if id <= 0 {
+		response := errs.ErrorResponse{
+			Code: "VALIDATION_ERROR",
+			Message: "Invalid user ID format. User id must be positive integer",
+		}
+        c.JSON(http.StatusBadRequest, response)
+        return
+    }
+
+	user, err := h.srv.FindUserById(c.Request.Context(), int(id))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	response := GetUserByIDSuccess{
+		ResponseSuccess: ResponseSuccess{
+			Code: "SUCCESS",
+			Message: "Get user by id successful",
+		},
+		Data: *user,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// Get user
+// @Summary Retrieve user by public ID
 // @Description Retrieve user's data from user's public id
 // @Tags User
 // @Security BearerAuth
@@ -135,7 +188,7 @@ func (h *UserHandler) GetUserPrimaryID(c *gin.Context)  {
 // @Failure 401 {object} errs.ErrorResponse "Unauthorized"
 // @Failure 404 {object} errs.ErrorResponse "User not found"
 // @Failure 500 {object} errs.ErrorResponse "Internal server error"
-// @Router /api/v1/users/public/:publicID [get]
+// @Router /api/v1/users/public/{publicID} [get]
 func (h *UserHandler) GetUserByPublicID(c *gin.Context)  {
 	publicID := c.Param("publicID")
 
