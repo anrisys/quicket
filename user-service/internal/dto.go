@@ -37,3 +37,8 @@ type LoginUserSuccess struct {
 type RegisterUserSuccess struct {
 	ResponseSuccess `json:",inline"`
 }
+
+type GetPrimaryIDSuccess struct {
+	ResponseSuccess `json:",inline"`
+	PrimaryID       uint `json:"primary_id" example:"123"`
+}

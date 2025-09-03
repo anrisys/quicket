@@ -90,3 +90,36 @@ func (h *UserHandler) Login(c *gin.Context)  {
 	}
 	c.JSON(http.StatusOK, response)
 }
+
+// Get userID
+// @Summary Retrieve user primary id
+// @Description Retrieve user's primary id from user's public id
+// @Tags User
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param publicID path string true "User Public ID"
+// @Success 200 {object} GetPrimaryIDSuccess
+// @Failure 400 {object} errs.ErrorResponse "Validation error"
+// @Failure 401 {object} errs.ErrorResponse "Unauthorized"
+// @Failure 404 {object} errs.ErrorResponse "User not found"
+// @Failure 500 {object} errs.ErrorResponse "Internal server error"
+// @Router /api/v1/users/{publicID}/primary-id [get]
+func (h *UserHandler) GetUserPrimaryID(c *gin.Context)  {
+	publicID := c.Param("publicID")
+
+	primaryID, err := h.srv.GetUserPrimaryID(c.Request.Context(), publicID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	response := GetPrimaryIDSuccess{
+		ResponseSuccess: ResponseSuccess{
+			Code: "SUCCESS",
+			Message: "Retrieve user's primary id successful",
+		},
+		PrimaryID: *primaryID,
+	}
+
+	c.JSON(http.StatusOK, response)
+}

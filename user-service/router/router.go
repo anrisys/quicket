@@ -55,4 +55,9 @@ func registerRoutes(r *gin.Engine, app *di.UserServiceApp) {
 		public.POST("/register", app.Handler.Register)
 		public.POST("/login", app.Handler.Login)
 	}
+	protected := r.Group("/api/v1/users")
+	protected.Use(middleware.JWTAuthMiddleware(app.Config.Security.JWTSecret))
+	{
+		protected.GET("/:publicID/primary-id", app.Handler.GetUserPrimaryID)
+	}
 }

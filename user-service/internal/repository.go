@@ -107,7 +107,7 @@ func (r *UserRepository) GetUserPrimaryID(ctx context.Context, publicID string) 
 		r.logger.Error().Ctx(ctx).Msg("DB operation failed")
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.NewErrNotFound("user")
+			return nil, ErrUserNotFound
 		}
 		
 		return nil, fmt.Errorf("failed to find user: %w", err)

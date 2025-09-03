@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/anrisys/quicket/user-service/pkg/errs"
@@ -127,7 +128,17 @@ func (s *UserService) FindUserByPublicID(ctx context.Context, publicID string) (
 }
 
 func (s *UserService) GetUserPrimaryID(ctx context.Context, publicID string) (*uint, error) {
-	return s.repo.GetUserPrimaryID(ctx, publicID)
+	userID, err := s.repo.GetUserPrimaryID(ctx, publicID)
+	if err != nil {
+		if errors.Is(err, ErrUserNotFound) {
+			return nil, errs.NewErrNotFound("user")
+		}
+		s.logger.Error().Err(err).
+			Str("public_id", publicID).
+			Msg("failed to get user primary id")
+		return nil, errs.ErrInternal
+	}
+	return userID, nil
 }
 
 func (s *UserService) toUserDTO(user *User) *UserDTO {
