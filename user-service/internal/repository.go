@@ -83,15 +83,16 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*User, 
 	return &user, nil
 }
 
-func (r *UserRepository) FindByPublicID(ctx context.Context, publicID string) (*User, error)  {
+func (r *UserRepository) FindByPublicID(ctx context.Context, publicID string) (*User, error) {
 	var user User
 	err := r.db.WithContext(ctx).Where("public_id = ?", publicID).First(&user).Error
 	if err != nil {
-		r.logger.Error().Ctx(ctx).Msg("DB operation failed")
-
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.NewErrNotFound("user")
+			return nil, ErrUserNotFound
 		}
+		r.logger.Error().Err(err).
+			Str("public_id", publicID).
+			Msg("failed to find user")
 		if isConnectionError(err) {
 			return nil, errs.NewServiceUnavailableError("database unavailable")
 		}
@@ -104,13 +105,14 @@ func (r *UserRepository) GetUserPrimaryID(ctx context.Context, publicID string) 
 	var userID uint
 	err := r.db.WithContext(ctx).Model(&User{}).Select("id").Where("public_id = ?", publicID).First(&userID).Error
 	if err != nil {
-		r.logger.Error().Ctx(ctx).Msg("DB operation failed")
-
+		
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrUserNotFound
 		}
-		
-		return nil, fmt.Errorf("failed to find user: %w", err)
+		r.logger.Error().Err(err).
+			Str("public_id", publicID).
+			Msg("failed to get user's primary id")
+		return nil, fmt.Errorf("failed to get user's primary id: %w", err)
 	}
 
 	return &userID, nil

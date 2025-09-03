@@ -117,7 +117,10 @@ func (s *UserService) FindUserById(ctx context.Context, id int) (*UserDTO, error
 func (s *UserService) FindUserByPublicID(ctx context.Context, publicID string) (*UserDTO, error) {
 	user, err := s.repo.FindByPublicID(ctx, publicID)
 	if err != nil {
-		return nil, fmt.Errorf("user service#findByPublicID: %w ", err)
+		if errors.Is(err, ErrUserNotFound) {
+			return nil, errs.NewErrNotFound("user")
+		}
+		return nil, errs.ErrInternal
 	}
 	return &UserDTO{
 		ID:       int(user.ID),
@@ -133,9 +136,6 @@ func (s *UserService) GetUserPrimaryID(ctx context.Context, publicID string) (*u
 		if errors.Is(err, ErrUserNotFound) {
 			return nil, errs.NewErrNotFound("user")
 		}
-		s.logger.Error().Err(err).
-			Str("public_id", publicID).
-			Msg("failed to get user primary id")
 		return nil, errs.ErrInternal
 	}
 	return userID, nil

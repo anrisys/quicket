@@ -100,7 +100,6 @@ func (h *UserHandler) Login(c *gin.Context)  {
 // @Produce json
 // @Param publicID path string true "User Public ID"
 // @Success 200 {object} GetPrimaryIDSuccess
-// @Failure 400 {object} errs.ErrorResponse "Validation error"
 // @Failure 401 {object} errs.ErrorResponse "Unauthorized"
 // @Failure 404 {object} errs.ErrorResponse "User not found"
 // @Failure 500 {object} errs.ErrorResponse "Internal server error"
@@ -119,6 +118,38 @@ func (h *UserHandler) GetUserPrimaryID(c *gin.Context)  {
 			Message: "Retrieve user's primary id successful",
 		},
 		PrimaryID: *primaryID,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// Get user
+// @Summary Retrieve user by ID
+// @Description Retrieve user's data from user's public id
+// @Tags User
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param publicID path string true "User Public ID"
+// @Success 200 {object} GetUserByPublicIDSuccess
+// @Failure 401 {object} errs.ErrorResponse "Unauthorized"
+// @Failure 404 {object} errs.ErrorResponse "User not found"
+// @Failure 500 {object} errs.ErrorResponse "Internal server error"
+// @Router /api/v1/users/public/:publicID [get]
+func (h *UserHandler) GetUserByPublicID(c *gin.Context)  {
+	publicID := c.Param("publicID")
+
+	user, err := h.srv.FindUserByPublicID(c.Request.Context(), publicID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	response := GetUserByPublicIDSuccess{
+		ResponseSuccess: ResponseSuccess{
+			Code: "SUCCESS",
+			Message: "Get user by public id successful",
+		},
+		Data: *user,
 	}
 
 	c.JSON(http.StatusOK, response)

@@ -42,3 +42,8 @@ type GetPrimaryIDSuccess struct {
 	ResponseSuccess `json:",inline"`
 	PrimaryID       uint `json:"primary_id" example:"123"`
 }
+
+type GetUserByPublicIDSuccess struct {
+	ResponseSuccess `json:",inline"`
+	Data            UserDTO `json:"data"`
+}
