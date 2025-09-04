@@ -1,26 +1,25 @@
 version: "3.8"
 
 services:
-  api:
+  monolith-api:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: quicket-api-dev
+    container_name: quicket-api-monolith
     volumes:
       - .:/app
-      - go-mode:/go/pkg/mod
-      - go-cache:/root/.cache/go-build
+      - quicket-monolith-go-mod:/go/pkg/mod
     ports:
       - "8080:8080"
     env_file:
       - .env
     depends_on:
-      - mysql
+      - monolith-mysql
     networks:
       - quicket-net
-  mysql:
+  monolith-mysql:
     image: mysql:8.0
-    container_name: quicket-mysql-dev
+    container_name: quicket-monolith-mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -30,15 +29,56 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - mysql_data_dev:/var/lib/mysql
+      - quicket-monolith-mysql-data:/var/lib/mysql
     networks:
       - quicket-net
-  migrate:
+  monolith-migrate:
     image: migrate/migrate
+    container_name: quicket-monolith-migrate
     volumes:
       - ./migrations:/migrations
     depends_on:
-      - mysql
+      - monolith-mysql
+    restart: no
+    networks:
+      - quicket-net
+  user-service-api:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile.dev
+    container_name: quicket-user-service-api
+    volumes:
+      - ./user-service:/app
+      - quicket-user-service-go-mod:/go/pkg/mod
+    env_file:
+      - .env
+    ports: -"8081:8081"
+    depends_on:
+      - user-service-mysql
+    networks:
+      - quicket-net
+  user-service-mysql:
+    image: mysql:8.0
+    container_name: user-service-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3308:3306"
+    volumes:
+      - quicket-user-service-mysql:/var/lib/mysql
+    networks:
+      - quicket-net
+  user-service-migrate:
+    image: migrate/migrate
+    container_name: quicket-user-service-migrate
+    volumes:
+      - ./user-service/migrations: /migrations
+    depends_on:
+      - user-service-mysql
     restart: no
     networks:
       - quicket-net
@@ -46,6 +86,7 @@ networks:
   quicket-net:
     driver: bridge
 volumes:
-  mysql_data_dev:
-  go-mod:
-  go-cache:
+  quicket-monolith-mysql-data:
+  quicket-monolith-go-mod:
+  quicket-user-service-go-mod:
+  quicket-user-service-mysql:
