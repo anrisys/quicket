@@ -3,8 +3,8 @@ package di
 import (
 	"github.com/anrisys/quicket/internal/booking"
 	"github.com/anrisys/quicket/internal/event"
+	"github.com/anrisys/quicket/internal/infrastructure"
 	"github.com/anrisys/quicket/internal/payment"
-	"github.com/anrisys/quicket/internal/user"
 	"github.com/anrisys/quicket/pkg/config"
 	"github.com/anrisys/quicket/pkg/config/logger"
 	"github.com/anrisys/quicket/pkg/database"
@@ -39,13 +39,16 @@ var (
 		SecuritySet,
 		TokenSet,
 	)
+	UserServiceClientSet = wire.NewSet(
+		infrastructure.NewUserServiceClient,
+		wire.Bind(new(types.UserReader), new(*infrastructure.UserServiceClient)),
+	)
 	AppProviderSet = wire.NewSet(
 		CoreSet, 
-		user.ProviderSet,
 		event.ProviderSet,
 		payment.ProviderSet,
 		booking.ProviderSet,
-		wire.Bind(new(types.UserReader), new(*user.UserService)),
+		UserServiceClientSet,
 		wire.Bind(new(types.EventReader), new(*event.EventService)),
 		wire.Bind(new(types.SimulatePayment), new(*payment.PaymentService)),
 		wire.Struct(new(App), "*"),

@@ -51,12 +51,6 @@ func SetupRouter(app *di.App) *gin.Engine {
 }
 
 func registerRoutes(r *gin.Engine, app *di.App) {
-	public := r.Group("/api/v1")
-	{
-		public.POST("/register", app.UserHandler.Register)
-		public.POST("/login", app.UserHandler.Login)
-	}
-
 	protected := r.Group("/api/v1")
 	protected.Use(middleware.JWTAuthMiddleware(app.Config.Security.JWTSecret))
 	{

@@ -9,13 +9,11 @@ package di
 import (
 	"github.com/anrisys/quicket/internal/booking"
 	"github.com/anrisys/quicket/internal/event"
+	"github.com/anrisys/quicket/internal/infrastructure"
 	"github.com/anrisys/quicket/internal/payment"
-	"github.com/anrisys/quicket/internal/user"
 	"github.com/anrisys/quicket/pkg/config"
 	"github.com/anrisys/quicket/pkg/config/logger"
 	"github.com/anrisys/quicket/pkg/database"
-	"github.com/anrisys/quicket/pkg/security"
-	"github.com/anrisys/quicket/pkg/token"
 )
 
 // Injectors from wire.go:
@@ -30,22 +28,17 @@ func InitializeApp() (*App, error) {
 		return nil, err
 	}
 	zerologLogger := logger.NewZerolog(appConfig)
-	userRepository := user.NewUserRepository(db, zerologLogger)
-	accountSecurity := security.NewAccountSecurity(appConfig)
-	generator := token.NewGenerator(appConfig)
-	userService := user.NewUserService(userRepository, zerologLogger, accountSecurity, generator)
-	userHandler := user.NewUserHandler(userService, zerologLogger)
 	gormRepository := booking.NewGormRepository(db, zerologLogger)
 	eventRepository := event.NewEventRepository(db, zerologLogger)
-	eventService := event.NewEventService(eventRepository, userService, zerologLogger)
+	userServiceClient := infrastructure.NewUserServiceClient(appConfig)
+	eventService := event.NewEventService(eventRepository, userServiceClient, zerologLogger)
 	paymentGormRepository := payment.NewRepository(db, zerologLogger)
 	paymentService := payment.NewPaymentService(paymentGormRepository, zerologLogger)
-	service := booking.NewService(gormRepository, eventService, zerologLogger, paymentService, userService)
+	service := booking.NewService(gormRepository, eventService, zerologLogger, paymentService, userServiceClient)
 	handler := booking.NewHandler(service, zerologLogger)
 	eventHandler := event.NewEventHandler(eventService, zerologLogger)
 	app := &App{
 		Config:         appConfig,
-		UserHandler:    userHandler,
 		BookingHandler: handler,
 		EventHandler:   eventHandler,
 	}
@@ -56,7 +49,6 @@ func InitializeApp() (*App, error) {
 
 type App struct {
 	Config         *config.AppConfig
-	UserHandler    *user.UserHandler
 	BookingHandler *booking.Handler
 	EventHandler   *event.EventHandler
 }

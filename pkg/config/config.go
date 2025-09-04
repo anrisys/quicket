@@ -32,6 +32,7 @@ type SecurityConfig struct {
 }
 
 type AppConfig struct {
+	UserServiceURL string `mapstructure:"USER_SERVICE_URL"`
 	Server   ServerConfig
 	Logging  LogConfig
 	Database DBConfig       `mapstructure:",squash"`
@@ -69,10 +70,22 @@ func Load() (*AppConfig, error) {
 		return nil, err
 	}
 
+	checkDatabaseConfig(config)
+
+	checkSecurityConfig(config)
+
+	checkClientServices(config)
+
+	return config, nil
+}
+
+func checkDatabaseConfig(config *AppConfig) {
 	if config.Database == (DBConfig{}) {
 		log.Fatal("Database has not been set yet")
 	}
+}
 
+func checkSecurityConfig(config *AppConfig) {
 	if config.Security.BcryptCost == 0 {
 		log.Fatal("BCRYPT Cose has not been set yet")
 	}
@@ -84,6 +97,10 @@ func Load() (*AppConfig, error) {
 	if config.Security.JWTExpiry == 0 {
 		log.Fatal("JWT Expiry has not been set or is invalid")
 	}
+}
 
-	return config, nil
+func checkClientServices(config *AppConfig) {
+	if config.UserServiceURL == "" {
+		log.Fatal("USER CLIENT URL has not been set yet")
+	}
 }

@@ -50,6 +50,7 @@ func JWTAuthMiddleware(secret string) gin.HandlerFunc {
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			c.Set("publicID", claims["sub"])
 			c.Set("role", claims["role"])
+			c.Set("Authorization", token)
 		}
 		c.Next()
 	}
