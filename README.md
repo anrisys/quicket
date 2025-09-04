@@ -58,44 +58,96 @@ The project is structured following the principles of a modular monolith, which 
 
 - api/docs/: Location for generated API documentation.
 
-  ```
-  quicket/
-  ├──  api/                         # API contracts or Swagger/OpenAPI
-  │ └── docs/                       # Generated API docs (Swagger)
-  ├── cmd/                          # Application entrypoints
-  │ └── server/
-  │ └── main.go                     # Main app entrypoint
-  ├── internal/                     # Business logic (domain-driven design)
-  │ ├── booking/                    # Booking domain (handler, service, repo)
-  │ ├── dto/                        # Request/response DTOs
-  │ ├── event/                      # Event domain
-  │ ├── payment/                    # Payment domain
-  │ ├── user/                       # User domain
-  │ └── validations/                # Custom input validation
-  ├── migration/                    # Database migration files
-  ├── pkg/                          # Shared libraries/utilities
-  │ ├── config/                     # Viper-based config loader
-  │ ├── database/                   # Database connection + GORM
-  │ ├── di/                         # Dependency injection with Wire
-  │ ├── middleware/                 # Gin middlewares (JWT, roles)
-  │ ├── security/                   # Password hashing
-  │ ├── token/                      # JWT utilities
-  │ ├── types/                      # Shared enums/types
-  │ └── util/                       # Helper utilities
-  ├── tests/                        # Integration test for endpoints
-  │ ├── integration/                # Integration test endpoint per domain/endpoints
-  │ └── test_utils/                 # Helper utilities for integration test
-  ├── .env                          # Local environment variables
-  ├── .example.env                  # Example env file
-  ├── .air.tomi                     # Configuration for auto-reload
-  ├── .dockerignore
-  ├── docker-compose.dev.yml        # Multi-image set up for development stage
-  ├── docker-compose.test.yml       # Multi-image set up for testing
-  ├── Dockerfile.dev                # App image build up instructions for development stage
-  ├── Dockerfile.test               # App image build up instructions for testing
-  ├── go.mod
-  └── go.sum
-  ```
+Root directory structure:
+
+```
+quicket/
+├── docker/                       # Docker configuration
+├── monolith/                     # Monolith Code
+├── user-service/                 # User service Code
+├── .gitignore
+├── LICENSE
+└── README.md
+```
+
+Monolith directory structure:
+
+```
+monolith/
+├──  api/                         # API contracts or Swagger/OpenAPI
+│ └── docs/                       # Generated API docs (Swagger)
+├── cmd/                          # Application entrypoints
+│ └── server/
+│ └── main.go                     # Main app entrypoint
+├── internal/                     # Business logic (domain-driven design)
+│ ├── booking/                    # Booking domain (handler, service, repo)
+│ ├── dto/                        # Request/response DTOs
+│ ├── event/                      # Event domain
+│ ├── payment/                    # Payment domain
+│ ├── user/                       # User domain
+│ └── validations/                # Custom input validation
+├── migration/                    # Database migration files
+├── pkg/                          # Shared libraries/utilities
+│ ├── config/                     # Viper-based config loader
+│ ├── database/                   # Database connection + GORM
+│ ├── di/                         # Dependency injection with Wire
+│ ├── middleware/                 # Gin middlewares (JWT, roles)
+│ ├── security/                   # Password hashing
+│ ├── token/                      # JWT utilities
+│ ├── types/                      # Shared enums/types
+│ └── util/                       # Helper utilities
+├── tests/                        # Integration test for endpoints
+│ ├── integration/                # Integration test endpoint per domain/endpoints
+│ └── test_utils/                 # Helper utilities for integration test
+├── .env                          # Local environment variables
+├── .example.env                  # Example env file
+├── .air.tomi                     # Configuration for auto-reload
+├── .dockerignore
+├── Dockerfile.dev                # App image build up instructions for development stage
+├── Dockerfile.test               # App image build up instructions for testing
+├── go.mod
+└── go.sum
+```
+
+Service directory structure, example with user service :
+
+```
+user-service/
+├──  api/                         # API contracts or Swagger/OpenAPI specifications
+│ └── docs/                       # Generated API documentation (Swagger UI)
+├── cmd/                          # Application entrypoints and main functions
+│ └── server/
+│ └── main.go                     # Main application entrypoint
+├── internal/                     # Private application code (business logic)
+│ ├── custom_validation.go        # Custom validation rules and functions
+│ ├── dto.go                      # Data Transfer Objects (request/response structs)
+│ ├── error_user.go               # User-specific error types and handling
+│ ├── handler.go                  # HTTP handlers and endpoint logic
+│ ├── model.go                    # Database models and GORM structs
+│ ├── repository.go               # Data access layer and database operations
+│ └── service.go                  # Business logic and service layer
+├── migration/                    # Database migration files (up/down SQL scripts)
+├── pkg/                          # Reusable packages and utilities
+│ ├── config/                     # Configuration loading (Viper-based)
+│ ├── database/                   # Database connection and GORM setup
+│ ├── di/                         # Dependency injection with Wire
+│ ├── middleware/                 # Gin middleware (JWT, CORS, logging, etc.)
+│ ├── security/                   # Security utilities (password hashing, encryption)
+│ ├── token/                      # JWT token generation and validation
+│ └── util/                       # Helper utilities and common functions
+├── router/                       # Router setup and route definitions
+├── tests/                        # Test files and testing utilities
+│ ├── integration/                # Integration tests for API endpoints
+│ └── test_utils/                 # Test helpers and utilities
+├── .env                          # Local environment variables
+├── .example.env                  # Example environment variables file
+├── .air.toml                     # Configuration for Air live reload
+├── .dockerignore                 # Docker ignore patterns
+├── Dockerfile.dev                # Dockerfile for development environment
+├── Dockerfile.test               # Dockerfile for testing environment
+├── go.mod                        # Go module dependencies
+└── go.sum                        # Go module checksums
+```
 
 ## ▶️ Getting Started
 

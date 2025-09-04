@@ -8,15 +8,15 @@ import (
 )
 
 type ServerConfig struct {
-	Port string `mapstructure:"PORT"`
+	Port string `mapstructure:"USER_SERVICE_PORT"`
 }
 
 type DBConfig struct {
-	DBHost     string `mapstructure:"DB_HOST"`
-	DBPort     string `mapstructure:"DB_PORT"`
-	DBUser     string `mapstructure:"DB_USER"`
-	DBPassword string `mapstructure:"DB_PASSWORD"`
-	DBName     string `mapstructure:"DB_NAME"`
+	DBHost     string `mapstructure:"USER_SERVICE_DB_HOST"`
+	DBPort     string `mapstructure:"USER_SERVICE_DB_PORT"`
+	DBUser     string `mapstructure:"USER_SERVICE_DB_USER"`
+	DBPassword string `mapstructure:"USER_SERVICE_DB_PASSWORD"`
+	DBName     string `mapstructure:"USER_SERVICE_DB_NAME"`
 }
 
 type LogConfig struct {
@@ -40,7 +40,7 @@ type AppConfig struct {
 
 func DefaultConfig() *AppConfig {
 	return &AppConfig{
-		Server:   ServerConfig{Port: "8080"},
+		Server:   ServerConfig{},
 		Logging:  LogConfig{Level: "debug", Pretty: true},
 		Security: SecurityConfig{BcryptCost: 14},
 		Database: DBConfig{},

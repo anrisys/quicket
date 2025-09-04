@@ -3,16 +3,16 @@ version: "3.8"
 services:
   monolith-api:
     build:
-      context: .
+      context: ../monolith
       dockerfile: Dockerfile.dev
     container_name: quicket-api-monolith
     volumes:
-      - .:/app
+      - ../monolith:/app
       - quicket-monolith-go-mod:/go/pkg/mod
     ports:
       - "8080:8080"
     env_file:
-      - .env
+      - ../monolith/.env
     depends_on:
       - monolith-mysql
     networks:
@@ -22,10 +22,10 @@ services:
     container_name: quicket-monolith-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MONOLITH_DB_PASSWORD}
+      MYSQL_DATABASE: ${MONOLITH_DB_NAME}
+      MYSQL_USER: ${MONOLITH_DB_USER}
+      MYSQL_PASSWORD: ${MONOLITH_DB_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -35,8 +35,10 @@ services:
   monolith-migrate:
     image: migrate/migrate
     container_name: quicket-monolith-migrate
+    env_file:
+      - ../monolith/.env
     volumes:
-      - ./migrations:/migrations
+      - ../monolith/migrations:/migrations
     depends_on:
       - monolith-mysql
     restart: no
@@ -44,14 +46,14 @@ services:
       - quicket-net
   user-service-api:
     build:
-      context: ./user-service
+      context: ../user-service
       dockerfile: Dockerfile.dev
     container_name: quicket-user-service-api
     volumes:
-      - ./user-service:/app
+      - ../user-service:/app
       - quicket-user-service-go-mod:/go/pkg/mod
     env_file:
-      - .env
+      - ../user-service/.env
     ports: -"8081:8081"
     depends_on:
       - user-service-mysql
@@ -61,11 +63,13 @@ services:
     image: mysql:8.0
     container_name: user-service-mysql
     restart: always
+    env_file:
+      - ../user-service/.env
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${USER_SERVICE_DB_PASSWORD}
+      MYSQL_DATABASE: ${USER_SERVICE_DB_NAME}
+      MYSQL_USER: ${USER_SERVICE_DB_USER}
+      MYSQL_PASSWORD: ${USER_SERVICE_DB_PASSWORD}
     ports:
       - "3308:3306"
     volumes:
@@ -75,8 +79,10 @@ services:
   user-service-migrate:
     image: migrate/migrate
     container_name: quicket-user-service-migrate
+    env_file:
+      - ../user-service/.env
     volumes:
-      - ./user-service/migrations: /migrations
+      - ../user-service/migrations: ./migrations
     depends_on:
       - user-service-mysql
     restart: no
