@@ -1,6 +1,17 @@
 version: "3.8"
 
 services:
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: quicket-api-gateway
+    ports: -"8080:80"
+    depends_on:
+      - monolith-api
+      - user-service-api
+    networks:
+      - quicket-net
   monolith-api:
     build:
       context: ../monolith
@@ -9,8 +20,8 @@ services:
     volumes:
       - ../monolith:/app
       - quicket-monolith-go-mod:/go/pkg/mod
-    ports:
-      - "8080:8080"
+    # ports:
+    #   - "8080:8080"
     env_file:
       - ../monolith/.env
     depends_on:
@@ -54,7 +65,7 @@ services:
       - quicket-user-service-go-mod:/go/pkg/mod
     env_file:
       - ../user-service/.env
-    ports: -"8081:8081"
+    # ports: -"8081:8081"
     depends_on:
       - user-service-mysql
     networks:
