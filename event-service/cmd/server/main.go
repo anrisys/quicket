@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/anrisys/quicket/user-service/pkg/di"
-	"github.com/anrisys/quicket/user-service/router"
+	"github.com/anrisys/quicket/event-service/pkg/di"
+	"github.com/anrisys/quicket/event-service/router"
 )
 
-// @title Quicket API
+// @title Quicket Event Service API
 // @version 1.0
-// @description User service API
+// @description Event service API
 
 // @contact.name Quicket Support
 // @contact.url https://github.com/anrisys/quicket
@@ -24,10 +24,10 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token
 
-// @host localhost:8081
+// @host localhost:8082
 // @BasePath /api/v1
 func main() {
-	app, err := di.InitializeUserServiceApp()
+	app, err := di.InitializeEventServiceApp()
     if err != nil {
         log.Fatalf("Failed to initialize app: %v", err)
     }
