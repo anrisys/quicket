@@ -121,15 +121,7 @@ func checkRedisServer(config *AppConfig) {
 		log.Fatal("Redis host has not been set yet")
 	}
 
-	if config.Redis.Password == "" {
-		log.Fatal("Redis Password has not been set yet")
-	}
-
 	if config.Redis.Port == "" {
 		log.Fatal("Redis password has not been set or is invalid")
-	}
-
-	if config.Redis.DB == 0 {
-		log.Fatal("Redis DB has not been set or is invalid")
 	}
 }
