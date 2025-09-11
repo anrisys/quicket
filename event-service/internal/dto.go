@@ -3,7 +3,6 @@ package internal
 import "time"
 
 type EventDTO struct {
-	ID             uint
 	PublicID       string
 	Title          string
 	Description    *string
@@ -13,6 +12,11 @@ type EventDTO struct {
 	AvailableSeats uint64
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+}
+
+type EventDTOWithID struct {
+	ID 			   uint
+	EventDTO
 }
 
 type SimpleEventDTO struct {
@@ -51,4 +55,14 @@ type UserDTO struct {
 	Email    string
 	PublicID string
 	Role     string
+}
+
+type FindByPublicIDSuccessResponse struct {
+	ResponseSuccess `json:",inline"`
+	Data EventDTO `json:"data"`
+}
+
+type FindByIDSuccessResponse struct {
+	ResponseSuccess `json:",inline"`
+	Data EventDTOWithID `json:"data"`
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/anrisys/quicket/event-service/internal"
 	"github.com/anrisys/quicket/event-service/pkg/config"
 	"github.com/anrisys/quicket/event-service/pkg/database"
+	"github.com/anrisys/quicket/event-service/pkg/redis"
 )
 
 // Injectors from wire.go:
@@ -26,7 +27,12 @@ func InitializeEventServiceApp() (*EventServiceApp, error) {
 	logger := config.NewZerolog(appConfig)
 	eventRepository := internal.NewEventRepository(db, logger)
 	userServiceClient := internal.NewUserServiceClient(appConfig)
-	eventService := internal.NewEventService(eventRepository, userServiceClient, logger)
+	configRedis, err := config.LoadRedisConfig()
+	if err != nil {
+		return nil, err
+	}
+	client := redis.NewClient(configRedis)
+	eventService := internal.NewEventService(eventRepository, userServiceClient, logger, client)
 	eventHandler := internal.NewEventHandler(eventService, logger)
 	eventServiceApp := &EventServiceApp{
 		Config:  appConfig,

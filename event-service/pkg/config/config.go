@@ -11,6 +11,13 @@ type ServerConfig struct {
 	Port string `mapstructure:"EVENT_SERVICE_PORT"`
 }
 
+type RedisServer struct {
+	Host string `mapstructure:"EVENT_REDIS_HOST"`
+	Port string `mapstructure:"EVENT_REDIS_PORT"`
+	Password string `mapstructure:"EVENT_REDIS_PASSWORD"`
+	DB int `mapstructure:"EVENT_REDIS_DB"`
+}
+
 type DBConfig struct {
 	DBHost     string `mapstructure:"EVENT_SERVICE_DB_HOST"`
 	DBPort     string `mapstructure:"EVENT_SERVICE_DB_PORT"`
@@ -32,11 +39,12 @@ type SecurityConfig struct {
 }
 
 type AppConfig struct {
-	UserServiceURL string `mapstructure:"USER_SERVICE_URL"`
-	Server   ServerConfig
-	Logging  LogConfig
-	Database DBConfig       `mapstructure:",squash"`
-	Security SecurityConfig `mapstructure:",squash"`
+	UserServiceURL 	string `mapstructure:"USER_SERVICE_URL"`
+	Server   		ServerConfig
+	Logging  		LogConfig
+	Database 		DBConfig       `mapstructure:",squash"`
+	Security 		SecurityConfig `mapstructure:",squash"`
+	Redis 			RedisServer
 }
 
 func DefaultConfig() *AppConfig {
@@ -45,6 +53,7 @@ func DefaultConfig() *AppConfig {
 		Logging:  LogConfig{Level: "debug", Pretty: true},
 		Security: SecurityConfig{BcryptCost: 14},
 		Database: DBConfig{},
+		Redis: RedisServer{},
 	}
 }
 
@@ -76,6 +85,8 @@ func Load() (*AppConfig, error) {
 
 	checkClientServices(config)
 
+	checkRedisServer(config)
+
 	return config, nil
 }
 
@@ -102,5 +113,23 @@ func checkSecurityConfig(config *AppConfig) {
 func checkClientServices(config *AppConfig) {
 	if config.UserServiceURL == "" {
 		log.Fatal("USER CLIENT URL has not been set yet")
+	}
+}
+
+func checkRedisServer(config *AppConfig) {
+	if config.Redis.Host == "" {
+		log.Fatal("Redis host has not been set yet")
+	}
+
+	if config.Redis.Password == "" {
+		log.Fatal("Redis Password has not been set yet")
+	}
+
+	if config.Redis.Port == "" {
+		log.Fatal("Redis password has not been set or is invalid")
+	}
+
+	if config.Redis.DB == 0 {
+		log.Fatal("Redis DB has not been set or is invalid")
 	}
 }

@@ -50,6 +50,9 @@ func SetupRouter(app *di.EventServiceApp) *gin.Engine {
 }
 
 func registerRoutes(r *gin.Engine, app *di.EventServiceApp) {
+	public := r.Group("/api/v1/events")
+	public.GET("/:publicID", app.Handler.GetEventByPublicID)
+	
 	protected := r.Group("/api/v1/events")
 	protected.Use(middleware.JWTAuthMiddleware(app.Config.Security.JWTSecret))
 	{

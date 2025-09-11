@@ -25,7 +25,7 @@ import (
 // @description Type "Bearer" followed by a space and JWT token
 
 // @host localhost:8082
-// @BasePath /api/v1
+// @BasePath /api/v1/events
 func main() {
 	app, err := di.InitializeEventServiceApp()
     if err != nil {
