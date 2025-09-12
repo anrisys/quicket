@@ -16,11 +16,11 @@ func ErrorMiddleware() gin.HandlerFunc {
 					Str("path", c.Request.URL.Path).
 					Str("method", c.Request.Method).
 					Msg("Recovered from panic in request handler")
-					appErr := errs.ErrInternal
-					c.JSON(appErr.Status, gin.H{
-						"code": appErr.Code,
-						"message": appErr.Message,
-					})
+				appErr := errs.ErrInternal
+				c.JSON(appErr.Status, gin.H{
+					"code": appErr.Code,
+					"message": appErr.Message,
+				})
 				c.Abort()
 			}
 		}()

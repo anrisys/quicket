@@ -9,6 +9,7 @@ package di
 import (
 	"quicket/booking-service/internal"
 	"quicket/booking-service/pkg/config"
+	"quicket/booking-service/pkg/database"
 )
 
 // Injectors from wire.go:
@@ -18,8 +19,15 @@ func InitializeApp() (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	repo := internal.NewRepo()
-	srv := internal.Newsrv(repo)
+	db, err := database.ConnectMySQL(configConfig)
+	if err != nil {
+		return nil, err
+	}
+	logger := config.NewZerolog(configConfig)
+	repo := internal.NewRepo(db, logger)
+	evReader := internal.NewEvReader(db, logger)
+	usrReader := internal.NewUsrReader(db, logger)
+	srv := internal.Newsrv(repo, evReader, usrReader, logger)
 	handler := internal.NewHandler(srv)
 	app := &App{
 		Config:  configConfig,

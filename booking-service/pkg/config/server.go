@@ -3,7 +3,7 @@ package config
 import "errors"
 
 type ServerConfig struct {
-	Port string `mapstructure:"EVENT_SERVICE_PORT"`
+	Port string `mapstructure:"SERVER_PORT"`
 }
 
 func (s *ServerConfig) Validate() error {
