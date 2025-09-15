@@ -1,4 +1,4 @@
-CREATE TABLE `users` (
+CREATE TABLE `users_snapshot` (
     `id`          BIGINT UNSIGNED PRIMARY KEY,
     `public_id`   CHAR(36) NOT NULL UNIQUE,
     `created_at`  DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

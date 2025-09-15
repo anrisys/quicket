@@ -1,4 +1,4 @@
-CREATE TABLE `events` (
+CREATE TABLE `events_snapshot` (
     `id`                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `public_id`         CHAR(36) NOT NULL UNIQUE,
     `title`             VARCHAR(256) NOT NULL,
