@@ -1,6 +1,8 @@
 package rabbitmq
 
 import (
+	"context"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/rs/zerolog"
 )
@@ -30,16 +32,45 @@ func (c *Consumer) DeclareExchange(name, kind string) error {
 	)
 }
 
-func (c *Consumer) DeclareQueue(queue string) error {
-	_, err := c.Channel.QueueDeclare(
-		queue, // name
-		true,  // durable
-		false, // auto-delete
-		false, // exclusive
-		false, // no-wait
-		nil,   // args
-	)
-	return err
+type QueueConfig struct {
+    Name       string
+    Durable    bool
+    AutoDelete bool
+    Exclusive  bool
+    NoWait     bool
+    Args       amqp.Table
+}
+
+func DefaultQueueConfig(name string) QueueConfig {
+    return QueueConfig{
+        Name:       name,
+        Durable:    true,
+        AutoDelete: false,
+        Exclusive:  false,
+        NoWait:     false,
+        Args:       nil,
+    }
+}
+
+func (q QueueConfig) WithDLQ(deadLetterExchange string) QueueConfig {
+    if q.Args == nil {
+        q.Args = make(amqp.Table)
+    }
+    q.Args["x-dead-letter-exchange"] = deadLetterExchange
+    return q
+}
+
+func (c *Consumer) DeclareQueue(config QueueConfig) (amqp.Queue, error) {
+    defer c.Channel.Close()
+
+    return c.Channel.QueueDeclare(
+        config.Name,
+        config.Durable,
+        config.AutoDelete,
+        config.Exclusive,
+        config.NoWait,
+        config.Args,
+    )
 }
 
 // BindQueue binds the queue to an exchange with a routing key.
@@ -53,7 +84,7 @@ func (c *Consumer) BindQueue(exchange, queue, routingKey string) error {
 	)
 }
 
-func (c *Consumer) StartConsuming(queueName string, handler func(amqp.Delivery)) error {
+func (c *Consumer) StartConsuming(ctx context.Context, queueName string, handler func(amqp.Delivery)) error {
     // Set up consumer
     messages, err := c.Channel.Consume(
         queueName,
@@ -71,8 +102,6 @@ func (c *Consumer) StartConsuming(queueName string, handler func(amqp.Delivery))
     
     // Start message processing in goroutine
     go func() {
-        defer c.Channel.Close() // Close Channel when consumer stops
-        
         for msg := range messages {
             handler(msg)
         }
@@ -84,5 +113,6 @@ func (c *Consumer) StartConsuming(queueName string, handler func(amqp.Delivery))
 
 // Close closes the consumer Channel.
 func (c *Consumer) Close() error {
+	c.logger.Info().Msg("Closing consumer channel")
 	return c.Channel.Close()
 }

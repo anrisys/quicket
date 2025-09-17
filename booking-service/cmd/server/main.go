@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"quicket/booking-service/pkg/di"
@@ -30,6 +31,12 @@ func main() {
     if err != nil {
         log.Fatalf("Failed to initialize app: %v", err)
     }
+
+    go func ()  {
+        if err := app.EventConsumer.Start(context.Background()); err != nil {
+            log.Fatalf("Failed to start event consumer: %v", err)
+        }
+    }()
     
     r := router.SetupRouter(app)
     

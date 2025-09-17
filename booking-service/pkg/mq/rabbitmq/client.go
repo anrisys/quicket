@@ -13,8 +13,8 @@ type Client struct {
     logger  zerolog.Logger
 }
 
-func NewClient(config *config.RabbitMQConfig, logger zerolog.Logger) (*Client, error) {
-    conn, err := amqp.Dial(config.URL())
+func NewClient(config *config.Config, logger zerolog.Logger) (*Client, error) {
+    conn, err := amqp.Dial(config.RabbitMQ.URL())
     if err != nil {
 		logger.Error().Err(err).Msg("failed to connect to RabbitMQ")
         return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)

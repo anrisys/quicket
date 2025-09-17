@@ -8,8 +8,10 @@ package di
 
 import (
 	"quicket/booking-service/internal"
+	"quicket/booking-service/internal/mq/consumer"
 	"quicket/booking-service/pkg/config"
 	"quicket/booking-service/pkg/database"
+	"quicket/booking-service/pkg/mq/rabbitmq"
 )
 
 // Injectors from wire.go:
@@ -29,9 +31,20 @@ func InitializeApp() (*App, error) {
 	usrReader := internal.NewUsrReader(db, logger)
 	srv := internal.Newsrv(repo, evReader, usrReader, logger)
 	handler := internal.NewHandler(srv)
+	client, err := rabbitmq.NewClient(configConfig, logger)
+	if err != nil {
+		return nil, err
+	}
+	rabbitmqConsumer, err := rabbitmq.NewConsumer(client, logger)
+	if err != nil {
+		return nil, err
+	}
+	evSnapshotRepo := internal.NewEvSnapshotRepo(db, logger)
+	eventConsumer := consumer.NewEventConsumer(rabbitmqConsumer, logger, evSnapshotRepo)
 	app := &App{
-		Config:  configConfig,
-		Handler: handler,
+		Config:        configConfig,
+		Handler:       handler,
+		EventConsumer: eventConsumer,
 	}
 	return app, nil
 }

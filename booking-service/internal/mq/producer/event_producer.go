@@ -20,6 +20,7 @@ func NewEventProducer(publisher *rabbitmq.Publisher) *EventProducer {
 func (evp *EventProducer) PublishAvailableSeatsUpdate(eventID, seats uint) error {
 	log := evp.logger.With().
 		Str("producer", "event_producer").
+		Str("action", "publish_available_seats_update").
 		Uint("event_id", eventID).
 		Uint("seats", seats).
 		Logger()
@@ -37,6 +38,7 @@ func (evp *EventProducer) PublishAvailableSeatsUpdate(eventID, seats uint) error
 
 	err = evp.publisher.Publish(exchange, "bookings.seats.updated", body)
 	if err != nil {
+		log.Error().Err(err).Str("exchange", exchange).Msg("failed to publish message")
 		return err
 	}
 
