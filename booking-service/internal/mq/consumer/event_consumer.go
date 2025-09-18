@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"quicket/booking-service/internal"
+	eventsnapshot "quicket/booking-service/internal/event_snapshot"
 	"quicket/booking-service/pkg/mq/rabbitmq"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -19,14 +19,14 @@ const (
 type EventConsumer struct {
 	rabbitConsumer *rabbitmq.Consumer
 	logger zerolog.Logger
-	eventRepo internal.EventSnapshotRepository
+	evSrv eventsnapshot.Service
 }
 
-func NewEventConsumer(consumer *rabbitmq.Consumer, logger zerolog.Logger, eventRepo internal.EventSnapshotRepository) *EventConsumer {
+func NewEventConsumer(consumer *rabbitmq.Consumer, logger zerolog.Logger, evSrv eventsnapshot.Service) *EventConsumer {
 	return &EventConsumer{
 		rabbitConsumer: consumer,
 		logger: logger,
-		eventRepo: eventRepo,
+		evSrv: evSrv,
 	}
 }
 
@@ -132,7 +132,7 @@ func (c *EventConsumer) handleEventCreated(msg amqp.Delivery) error {
     log.Info().Msg("Processing event creation message")
 
     // Create event snapshot in local database
-    eventSnapshot := internal.EventSnapshot{
+    eventSnapshot := eventsnapshot.EventSnapshot{
         ID:             eventMsg.ID,
         PublicID:       eventMsg.PublicID,
         Title:          eventMsg.Title,
@@ -143,7 +143,7 @@ func (c *EventConsumer) handleEventCreated(msg amqp.Delivery) error {
         UpdatedAt:    	eventMsg.CreatedAt,
     }
 
-    if err := c.eventRepo.CreateSnapshot(context.Background(), &eventSnapshot); err != nil {
+    if err := c.evSrv.CreateSnapshot(context.Background(), &eventSnapshot); err != nil {
         return fmt.Errorf("failed to create event snapshot: %w", err)
     }
 
@@ -168,7 +168,7 @@ func (c *EventConsumer) handleEventUpdated(msg amqp.Delivery) error {
 
     log.Info().Msg("Processing event update message")
 
-    eventSnapshot := internal.EventSnapshot{
+    eventSnapshot := eventsnapshot.EventSnapshot{
         ID:             eventMsg.ID,
         PublicID:       eventMsg.PublicID,
         Title:          eventMsg.Title,
@@ -179,7 +179,7 @@ func (c *EventConsumer) handleEventUpdated(msg amqp.Delivery) error {
         UpdatedAt:    	eventMsg.CreatedAt,
     }
 
-    if err := c.eventRepo.UpdateSnapshot(context.Background(), &eventSnapshot); err != nil {
+    if err := c.evSrv.UpdateSnapshot(context.Background(), &eventSnapshot); err != nil {
         return fmt.Errorf("failed to update event snapshot: %w", err)
     }
 
@@ -200,7 +200,7 @@ func (c *EventConsumer) handleEventDeleted(msg amqp.Delivery) error {
         return fmt.Errorf("failed to unmarshal delete message: %w", err)
     }
 
-    if err := c.eventRepo.DeleteSnapshot(context.Background(), deleteMsg.EventID); err != nil {
+    if err := c.evSrv.DeleteSnapshot(context.Background(), deleteMsg.EventID); err != nil {
         return fmt.Errorf("failed to delete event snapshot: %w", err)
     }
 
@@ -223,7 +223,7 @@ func (c *EventConsumer) handleSeatsUpdated(msg amqp.Delivery) error {
         return fmt.Errorf("failed to unmarshal seats message: %w", err)
     }
 
-    if err := c.eventRepo.UpdateSeats(
+    if err := c.evSrv.UpdateSeatsSnapshot(
         context.Background(),
         seatsMsg.EventID,
         seatsMsg.AvailableSeats,

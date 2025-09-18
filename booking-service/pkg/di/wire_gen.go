@@ -7,8 +7,10 @@
 package di
 
 import (
-	"quicket/booking-service/internal"
+	"quicket/booking-service/internal/booking"
+	"quicket/booking-service/internal/event_snapshot"
 	"quicket/booking-service/internal/mq/consumer"
+	"quicket/booking-service/internal/user_snapshot"
 	"quicket/booking-service/pkg/config"
 	"quicket/booking-service/pkg/database"
 	"quicket/booking-service/pkg/mq/rabbitmq"
@@ -26,11 +28,13 @@ func InitializeApp() (*App, error) {
 		return nil, err
 	}
 	logger := config.NewZerolog(configConfig)
-	repo := internal.NewRepo(db, logger)
-	evReader := internal.NewEvReader(db, logger)
-	usrReader := internal.NewUsrReader(db, logger)
-	srv := internal.Newsrv(repo, evReader, usrReader, logger)
-	handler := internal.NewHandler(srv)
+	repo := booking.NewRepo(db, logger)
+	evSnapshotRepo := eventsnapshot.NewEvSnapshotRepo(db, logger)
+	srv := eventsnapshot.NewEvSnapshotSrv(evSnapshotRepo, logger)
+	usersnapshotRepo := usersnapshot.NewRepo(db, logger)
+	usersnapshotSrv := usersnapshot.NewSrv(usersnapshotRepo, logger)
+	bookingSrv := booking.Newsrv(repo, srv, usersnapshotSrv, logger)
+	handler := booking.NewHandler(bookingSrv)
 	client, err := rabbitmq.NewClient(configConfig, logger)
 	if err != nil {
 		return nil, err
@@ -39,8 +43,7 @@ func InitializeApp() (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	evSnapshotRepo := internal.NewEvSnapshotRepo(db, logger)
-	eventConsumer := consumer.NewEventConsumer(rabbitmqConsumer, logger, evSnapshotRepo)
+	eventConsumer := consumer.NewEventConsumer(rabbitmqConsumer, logger, srv)
 	app := &App{
 		Config:        configConfig,
 		Handler:       handler,

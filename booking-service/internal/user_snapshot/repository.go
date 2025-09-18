@@ -1,4 +1,4 @@
-package internal
+package usersnapshot
 
 import (
 	"context"
@@ -9,23 +9,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserReader interface {
+type Repository interface {
 	GetUserID(ctx context.Context, publicID string) (*uint, error)
 }
 
-type UsrReader struct {
+type repo struct {
 	db *gorm.DB
 	logger zerolog.Logger
 }
 
-func NewUsrReader(db *gorm.DB, logger zerolog.Logger) *UsrReader {
-	return &UsrReader{
+func NewRepo(db *gorm.DB, logger zerolog.Logger) *repo {
+	return &repo{
 		db: db,
 		logger: logger,
 	}
 }
 
-func (r *UsrReader) GetUserID(ctx context.Context, publicID string) (*uint, error) {
+func (r *repo) GetUserID(ctx context.Context, publicID string) (*uint, error) {
 	var usr *uint
 	err := r.db.WithContext(ctx).Select("id").Take(usr, "public_id = ?", publicID).Error
 	if err != nil {

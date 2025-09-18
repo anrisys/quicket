@@ -1,9 +1,11 @@
-package internal
+package booking
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	eventsnapshot "quicket/booking-service/internal/event_snapshot"
+	usersnapshot "quicket/booking-service/internal/user_snapshot"
 	"quicket/booking-service/pkg/errs"
 	"quicket/booking-service/pkg/util"
 	"time"
@@ -19,16 +21,16 @@ type ServiceInterface interface {
 
 type srv struct {
 	repo RepositoryInterface
-	eventReader EventReader
-	usrReader UserReader
+	evSrv eventsnapshot.Service
+	usrSrv usersnapshot.Service
 	logger zerolog.Logger
 }
 
-func Newsrv(repo RepositoryInterface, eventReader EventReader, usrReader UserReader, logger zerolog.Logger) *srv {
+func Newsrv(repo RepositoryInterface, evSrv eventsnapshot.Service, usrSrv usersnapshot.Service, logger zerolog.Logger) *srv {
 	return &srv{
 		repo: repo,
-		eventReader: eventReader,
-		usrReader: usrReader,
+		evSrv: evSrv,
+		usrSrv: usrSrv,
 		logger: logger,
 	}
 }
@@ -38,7 +40,7 @@ func (s *srv) FindByID(id uint) error {
 }
 
 func (s *srv) Create(ctx context.Context, req *CreateBookingRequest, userPublicID string) (*BookingDTO, error) {
-		log := s.logger.With().
+	log := s.logger.With().
 		Str("event_public_id", req.EventID).
 		Uint("seats", req.Seats).
 		Str("user_public_id", userPublicID).
@@ -47,7 +49,7 @@ func (s *srv) Create(ctx context.Context, req *CreateBookingRequest, userPublicI
 	log.Info().Msg("Create booking request")
 	
 	log.Debug().Msg("Checking eventID exist or not")
-	ev, err := s.eventReader.GetEventDateTimeAndSeats(ctx, req.EventID)
+	ev, err := s.evSrv.GetEventSnapshotDateTimeAndSeats(ctx, req.EventID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errs.NewErrNotFound("event")
@@ -59,7 +61,7 @@ func (s *srv) Create(ctx context.Context, req *CreateBookingRequest, userPublicI
 		return nil, errs.NewConflictError("can not book past event")
 	}
 
-	userID, err := s.usrReader.GetUserID(ctx, userPublicID)
+	userID, err := s.usrSrv.GetUserSnapshotID(ctx, userPublicID)
 	if err != nil {
 		return nil, fmt.Errorf("booking service#create: %w", err)
 	}

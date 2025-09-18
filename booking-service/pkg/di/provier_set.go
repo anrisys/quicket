@@ -1,9 +1,11 @@
 package di
 
 import (
-	"quicket/booking-service/internal"
+	"quicket/booking-service/internal/booking"
+	eventsnapshot "quicket/booking-service/internal/event_snapshot"
 	"quicket/booking-service/internal/mq/consumer"
 	"quicket/booking-service/internal/mq/producer"
+	usersnapshot "quicket/booking-service/internal/user_snapshot"
 	"quicket/booking-service/pkg/clients"
 	"quicket/booking-service/pkg/config"
 	"quicket/booking-service/pkg/database"
@@ -18,10 +20,10 @@ var (
 		config.NewZerolog,
 		database.ConnectMySQL,
 	)
-	// SnapshotSet = wire.NewSet(
-	// 	internal.NewEvSnapshotRepo,
-	// 	wire.Bind(new(internal.EventSnapshotRepository), new(*internal.EvSnapshotRepo)),
-	// )
+	SnapshotSet = wire.NewSet(
+		eventsnapshot.ProviderSet,
+		usersnapshot.ProviderSet,
+	)
 	RabbitMQSet = wire.NewSet(
 		rabbitmq.SetUpProviderSet,
 		producer.NewEventProducer,
@@ -31,7 +33,8 @@ var (
 		ConfigSet,
 		RabbitMQSet,
 		clients.ClientServices,
-		internal.InternalProviderSet,
+		SnapshotSet,
+		booking.ProviderSet,
 		wire.Struct(new(App), "*"),
 	)
 )
