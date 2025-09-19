@@ -8,6 +8,8 @@ import (
 
 type Service interface {
 	GetUserSnapshotID(ctx context.Context, publicID string) (*uint, error)
+	CreateUserSnapshot(ctx context.Context, userID uint, userPublicID string) error
+	DeleteUserSnapshot(ctx context.Context, id uint) error
 }
 
 type srv struct {
@@ -28,4 +30,16 @@ func (s *srv) GetUserSnapshotID(ctx context.Context, publicID string) (*uint, er
 		return nil, err
 	}
 	return id, nil
+}
+
+func (s *srv) CreateUserSnapshot(ctx context.Context, userID uint, userPublicID string) error {
+	usr := UserSnapshot{
+		ID: userID,
+		PublicID: userPublicID,
+	}
+	return s.repo.Create(ctx, &usr)
+}
+
+func (s *srv) DeleteUserSnapshot(ctx context.Context, id uint) error {
+	return s.repo.Delete(ctx, id)
 }

@@ -44,10 +44,12 @@ func InitializeApp() (*App, error) {
 		return nil, err
 	}
 	eventConsumer := consumer.NewEventConsumer(rabbitmqConsumer, logger, srv)
+	userConsumer := consumer.NewUserConsumer(rabbitmqConsumer, logger, usersnapshotSrv)
 	app := &App{
 		Config:        configConfig,
 		Handler:       handler,
 		EventConsumer: eventConsumer,
+		UserConsumer:  userConsumer,
 	}
 	return app, nil
 }

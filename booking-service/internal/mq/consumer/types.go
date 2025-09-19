@@ -19,3 +19,12 @@ type EventCreatedMessage struct {
 type EventUpdatedMessage struct {
 	EventCreatedMessage `json:",inline"`
 }
+
+type UserCreatedMessage struct {
+	ID 			uint 	`json:"id"`
+	PublicID 	string 	`json:"public_id"`
+}
+
+type UserDeletedMessage struct {
+	ID uint `json:"id"`
+}

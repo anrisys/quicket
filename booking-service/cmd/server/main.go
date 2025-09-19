@@ -37,6 +37,12 @@ func main() {
             log.Fatalf("Failed to start event consumer: %v", err)
         }
     }()
+
+    go func ()  {
+        if err := app.UserConsumer.Start(context.Background()); err != nil {
+            log.Fatalf("Failed to start event consumer: %v", err)
+        }
+    }()
     
     r := router.SetupRouter(app)
     

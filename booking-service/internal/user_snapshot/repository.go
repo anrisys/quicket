@@ -11,6 +11,8 @@ import (
 
 type Repository interface {
 	GetUserID(ctx context.Context, publicID string) (*uint, error)
+	Create(ctx context.Context, usr *UserSnapshot) error
+	Delete(ctx context.Context, id uint) error
 }
 
 type repo struct {
@@ -38,4 +40,14 @@ func (r *repo) GetUserID(ctx context.Context, publicID string) (*uint, error) {
 		return nil, fmt.Errorf("%w: %v", ErrDB, err)
 	}
 	return usr, nil
+}
+
+func (r *repo) Create(ctx context.Context, usr *UserSnapshot) error {
+	err := r.db.WithContext(ctx).Create(usr).Error
+	return err
+}
+
+func (r *repo) Delete(ctx context.Context, id uint) error {
+	err := r.db.WithContext(ctx).Delete(&UserSnapshot{}, id).Error
+	return err
 }

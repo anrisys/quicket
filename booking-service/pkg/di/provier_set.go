@@ -28,6 +28,7 @@ var (
 		rabbitmq.SetUpProviderSet,
 		producer.NewEventProducer,
 		consumer.NewEventConsumer,
+		consumer.NewUserConsumer,
 	)
 	AppProviderSet = wire.NewSet(
 		ConfigSet,

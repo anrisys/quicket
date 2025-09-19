@@ -10,4 +10,5 @@ type App struct {
 	Config *config.Config
 	Handler *booking.Handler
 	EventConsumer *consumer.EventConsumer
+	UserConsumer *consumer.UserConsumer
 }
