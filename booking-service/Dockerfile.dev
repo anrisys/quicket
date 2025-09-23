@@ -1,0 +1,10 @@
+FROM quicket-base-dev:latest
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+EXPOSE 8083
+
+CMD [ "air", "-c", ".air.toml" ]

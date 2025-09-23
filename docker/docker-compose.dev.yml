@@ -55,6 +55,18 @@ services:
     restart: no
     networks:
       - quicket-net
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: myuser
+      RABBITMQ_DEFAULT_PASS: mysecretpassword
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_logs:/var/log/rabbitmq
   user-service-api:
     build:
       context: ../user-service
@@ -99,6 +111,50 @@ services:
     restart: no
     networks:
       - quicket-net
+  booking-service-api:
+    build:
+      context: ../booking-service
+      dockerfile: Dockerfile.dev
+    container_name: quicket-booking-service-api
+    volumes:
+      - ../booking-service:/app
+      - quicket-booking-service-go-mod:/go/pkg/mod
+    env_file:
+      - ../booking-service/.env
+    # ports: -"8081:8081"
+    depends_on:
+      - booking-service-mysql
+    networks:
+      - quicket-net
+  booking-service-mysql:
+    image: mysql:8.0
+    container_name: booking-service-mysql
+    restart: always
+    env_file:
+      - ../booking-service/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3309:3306"
+    volumes:
+      - quicket-booking-service-mysql:/var/lib/mysql
+    networks:
+      - quicket-net
+  booking-service-migrate:
+    image: migrate/migrate
+    container_name: quicket-booking-service-migrate
+    env_file:
+      - ../booking-service/.env
+    volumes:
+      - ../booking-service/migrations: ./migrations
+    depends_on:
+      - booking-service-mysql
+    restart: no
+    networks:
+      - quicket-net
 networks:
   quicket-net:
     driver: bridge
@@ -107,3 +163,5 @@ volumes:
   quicket-monolith-go-mod:
   quicket-user-service-go-mod:
   quicket-user-service-mysql:
+  rabbitmq_data:
+  rabbitmq_logs:

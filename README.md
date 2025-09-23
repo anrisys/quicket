@@ -62,7 +62,10 @@ Root directory structure:
 
 ```
 quicket/
+├── api-gateway/                  # NGINX configuration
+├── booking-service/              # Booking service Code
 ├── docker/                       # Docker configuration
+├── event-service/                # Event service Code
 ├── monolith/                     # Monolith Code
 ├── user-service/                 # User service Code
 ├── .gitignore
