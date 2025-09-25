@@ -67,6 +67,10 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - rabbitmq_logs:/var/log/rabbitmq
+  quicket-base-dev:
+    build:
+      context: ../docker
+      dockerfile: base-dev.Dockerfile
   user-service-api:
     build:
       context: ../user-service
@@ -77,9 +81,10 @@ services:
       - quicket-user-service-go-mod:/go/pkg/mod
     env_file:
       - ../user-service/.env
-    # ports: -"8081:8081"
+    ports: "8081:8081"
     depends_on:
-      - user-service-mysql
+      user-service-mysql:
+        condition: service_healthy
     networks:
       - quicket-net
   user-service-mysql:
@@ -105,9 +110,14 @@ services:
     env_file:
       - ../user-service/.env
     volumes:
-      - ../user-service/migrations: ./migrations
+      - ../user-service/migrations:/migrations
+    command:
+      - "-path=/migrations"
+      - "-database=mysql://${USER_SERVICE_DB_USER}:${USER_SERVICE_DB_PASSWORD}@user-service-mysql:3306/${USER_SERVICE_DB_NAME}"
+      - "up"
     depends_on:
-      - user-service-mysql
+      user-service-mysql:
+        condition: service_healthy
     restart: no
     networks:
       - quicket-net

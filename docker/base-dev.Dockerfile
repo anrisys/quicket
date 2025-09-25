@@ -1,6 +1,6 @@
-FROM golang:1.24
+FROM golang:tip-alpine3.22
 
-RUN go install github.com/cosmtrek/air@latest && \
-    go install github.com/swaggo/swag/cmd/swag@latest
+RUN go install github.com/air-verse/air@v1.63.0 && \
+    go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
 WORKDIR /app

@@ -1,0 +1,318 @@
+basePath: /api/v1
+definitions:
+  errs.ErrorResponse:
+    properties:
+      code:
+        example: VALIDATION_ERROR
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/errs.FieldError'
+        type: array
+      message:
+        example: Invalid input data
+        type: string
+    type: object
+  errs.FieldError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
+  internal.GetPrimaryIDSuccess:
+    properties:
+      code:
+        example: SUCCESS
+        type: string
+      message:
+        example: Operation successful
+        type: string
+      primary_id:
+        example: 123
+        type: integer
+    type: object
+  internal.GetUserByIDSuccess:
+    properties:
+      code:
+        example: SUCCESS
+        type: string
+      data:
+        $ref: '#/definitions/internal.UserDTO'
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  internal.GetUserByPublicIDSuccess:
+    properties:
+      code:
+        example: SUCCESS
+        type: string
+      data:
+        $ref: '#/definitions/internal.UserDTO'
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  internal.LoginUserDTO:
+    properties:
+      public_id:
+        example: user_123
+        type: string
+      token:
+        example: jwt.token.here
+        type: string
+    type: object
+  internal.LoginUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal.LoginUserSuccess:
+    properties:
+      code:
+        example: SUCCESS
+        type: string
+      data:
+        $ref: '#/definitions/internal.LoginUserDTO'
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  internal.RegisterUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      password_confirmation:
+        type: string
+      role:
+        enum:
+        - user
+        - organizer
+        - admin
+        type: string
+    required:
+    - email
+    - password
+    - password_confirmation
+    type: object
+  internal.RegisterUserSuccess:
+    properties:
+      code:
+        example: SUCCESS
+        type: string
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  internal.UserDTO:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      publicID:
+        type: string
+      role:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    email: anris.y.simorangkir@gmail.com
+    name: Quicket Support
+    url: https://github.com/anrisys/quicket
+  description: User service API
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Quicket API
+  version: "1.0"
+paths:
+  /api/v1//login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT token
+      parameters:
+      - description: User login data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal.LoginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal.LoginUserSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+      summary: Log in a user
+      tags:
+      - Public
+      - Auth
+  /api/v1/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with email and password
+      parameters:
+      - description: User Registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal.RegisterUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal.RegisterUserSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Public
+      - Users
+  /api/v1/users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve user's data from user's id
+      parameters:
+      - description: User ID
+        in: path
+        name: publicID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal.GetUserByIDSuccess'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Retrieve user by ID
+      tags:
+      - User
+  /api/v1/users/{publicID}/primary-id:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve user's primary id from user's public id
+      parameters:
+      - description: User Public ID
+        in: path
+        name: publicID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal.GetPrimaryIDSuccess'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Retrieve user primary id
+      tags:
+      - User
+  /api/v1/users/public/{publicID}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve user's data from user's public id
+      parameters:
+      - description: User Public ID
+        in: path
+        name: publicID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal.GetUserByPublicIDSuccess'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errs.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Retrieve user by public ID
+      tags:
+      - User
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
