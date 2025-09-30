@@ -8,8 +8,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func NewZerolog(cfg *AppConfig) zerolog.Logger {
-	cfgLogger := cfg.Logging
+func NewZerolog(cfg *Config) zerolog.Logger {
+	cfgLogger := cfg.Log
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
 	logLevel, err := zerolog.ParseLevel(cfgLogger.Level)

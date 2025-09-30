@@ -20,9 +20,9 @@ type AccountSecurity struct {
 	bcryptCost int
 }
 
-func NewAccountSecurity(cfg *config.AppConfig) *AccountSecurity {
+func NewAccountSecurity(cfg *config.Config) *AccountSecurity {
 	return &AccountSecurity{
-		bcryptCost: cfg.Security.BcryptCost,
+		bcryptCost: cfg.Bcrypt.BcryptCost,
 	}
 }
 

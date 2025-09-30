@@ -17,11 +17,11 @@ type TokenGenerator struct {
 	expiry time.Duration
 }
 
-func NewTokenGenerator(cfg *config.AppConfig) *TokenGenerator {
+func NewTokenGenerator(cfg *config.Config) *TokenGenerator {
 	return &TokenGenerator{
-		secret: cfg.Security.JWTSecret,
-		issuer: cfg.Security.JWTIssuer,
-		expiry: cfg.Security.JWTExpiry,
+		secret: cfg.JWT.JWTSecret,
+		issuer: cfg.JWT.JWTIssuer,
+		expiry: cfg.JWT.JWTExpiry,
 	}
 }
 

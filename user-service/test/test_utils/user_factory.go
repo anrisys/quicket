@@ -11,7 +11,7 @@ import (
 	"github.com/anrisys/quicket/user-service/pkg/security"
 )
 
-func CreateTestUser(cfg *config.AppConfig) (*internal.User, error) {
+func CreateTestUser(cfg *config.Config) (*internal.User, error) {
 	accSecurity := security.NewAccountSecurity(cfg)
 	hashedPassword, err := accSecurity.HashPassword(context.Background(), "Pass345!@#")
 	if err != nil {
@@ -37,7 +37,7 @@ func CreateTestUser(cfg *config.AppConfig) (*internal.User, error) {
 	return data, nil
 }
 
-func CleanupTestUser(cfg *config.AppConfig, email string) error {
+func CleanupTestUser(cfg *config.Config, email string) error {
 	db, err := database.ConnectMySQL(cfg)
 	if err != nil {
 		return err

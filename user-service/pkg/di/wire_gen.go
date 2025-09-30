@@ -17,22 +17,22 @@ import (
 // Injectors from wire.go:
 
 func InitializeUserServiceApp() (*UserServiceApp, error) {
-	appConfig, err := config.Load()
+	configConfig, err := config.Load()
 	if err != nil {
 		return nil, err
 	}
-	db, err := database.ConnectMySQL(appConfig)
+	db, err := database.ConnectMySQL(configConfig)
 	if err != nil {
 		return nil, err
 	}
-	logger := config.NewZerolog(appConfig)
+	logger := config.NewZerolog(configConfig)
 	userRepository := internal.NewUserRepository(db, logger)
-	accountSecurity := security.NewAccountSecurity(appConfig)
-	tokenGenerator := token.NewTokenGenerator(appConfig)
+	accountSecurity := security.NewAccountSecurity(configConfig)
+	tokenGenerator := token.NewTokenGenerator(configConfig)
 	userService := internal.NewUserService(userRepository, logger, accountSecurity, tokenGenerator)
 	userHandler := internal.NewUserHandler(userService, logger)
 	userServiceApp := &UserServiceApp{
-		Config:  appConfig,
+		Config:  configConfig,
 		Handler: userHandler,
 	}
 	return userServiceApp, nil

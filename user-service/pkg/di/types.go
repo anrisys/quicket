@@ -6,6 +6,6 @@ import (
 )
 
 type UserServiceApp struct {
-	Config  *config.AppConfig
+	Config  *config.Config
 	Handler *internal.UserHandler
 }
