@@ -1,177 +1,62 @@
-version: "3.8"
-
 services:
-  api-gateway:
-    build:
-      context: ../api-gateway
-      dockerfile: Dockerfile
-    container_name: quicket-api-gateway
-    ports: -"8080:80"
-    depends_on:
-      - monolith-api
-      - user-service-api
-    networks:
-      - quicket-net
-  monolith-api:
-    build:
-      context: ../monolith
-      dockerfile: Dockerfile.dev
-    container_name: quicket-api-monolith
-    volumes:
-      - ../monolith:/app
-      - quicket-monolith-go-mod:/go/pkg/mod
-    # ports:
-    #   - "8080:8080"
-    env_file:
-      - ../monolith/.env
-    depends_on:
-      - monolith-mysql
-    networks:
-      - quicket-net
-  monolith-mysql:
-    image: mysql:8.0
-    container_name: quicket-monolith-mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MONOLITH_DB_PASSWORD}
-      MYSQL_DATABASE: ${MONOLITH_DB_NAME}
-      MYSQL_USER: ${MONOLITH_DB_USER}
-      MYSQL_PASSWORD: ${MONOLITH_DB_PASSWORD}
-    ports:
-      - "3307:3306"
-    volumes:
-      - quicket-monolith-mysql-data:/var/lib/mysql
-    networks:
-      - quicket-net
-  monolith-migrate:
-    image: migrate/migrate
-    container_name: quicket-monolith-migrate
-    env_file:
-      - ../monolith/.env
-    volumes:
-      - ../monolith/migrations:/migrations
-    depends_on:
-      - monolith-mysql
-    restart: no
-    networks:
-      - quicket-net
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: myuser
-      RABBITMQ_DEFAULT_PASS: mysecretpassword
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-      - rabbitmq_logs:/var/log/rabbitmq
   quicket-base-dev:
     build:
       context: ../docker
       dockerfile: base-dev.Dockerfile
-  user-service-api:
+  user-api:
     build:
       context: ../user-service
       dockerfile: Dockerfile.dev
-    container_name: quicket-user-service-api
+    container_name: quicket-user-api
     volumes:
       - ../user-service:/app
-      - quicket-user-service-go-mod:/go/pkg/mod
+      - quicket-user-go-mod:/go/pkg/mod
     env_file:
-      - ../user-service/.env
-    ports: "8081:8081"
+      - ./.env
+    ports:
+      - "8081:8081"
     depends_on:
-      user-service-mysql:
+      user-mysql:
         condition: service_healthy
     networks:
       - quicket-net
-  user-service-mysql:
-    image: mysql:8.0
-    container_name: user-service-mysql
+  user-mysql:
+    image: mysql:8.0.43-debian
+    container_name: user-mysql
     restart: always
     env_file:
-      - ../user-service/.env
+      - ./.env
     environment:
-      MYSQL_ROOT_PASSWORD: ${USER_SERVICE_DB_PASSWORD}
-      MYSQL_DATABASE: ${USER_SERVICE_DB_NAME}
-      MYSQL_USER: ${USER_SERVICE_DB_USER}
-      MYSQL_PASSWORD: ${USER_SERVICE_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${USER_MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${USER_MYSQL_DB_NAME}
+      MYSQL_USER: ${USER_MYSQL_USER}
+      MYSQL_PASSWORD: ${USER_MYSQL_PASSWORD}
     ports:
-      - "3308:3306"
+      - "${USER_MYSQL_EXTERNAL_PORT}:3306"
     volumes:
-      - quicket-user-service-mysql:/var/lib/mysql
+      - quicket-user-mysql:/var/lib/mysql
     networks:
       - quicket-net
-  user-service-migrate:
-    image: migrate/migrate
-    container_name: quicket-user-service-migrate
-    env_file:
-      - ../user-service/.env
-    volumes:
-      - ../user-service/migrations:/migrations
-    command:
-      - "-path=/migrations"
-      - "-database=mysql://${USER_SERVICE_DB_USER}:${USER_SERVICE_DB_PASSWORD}@user-service-mysql:3306/${USER_SERVICE_DB_NAME}"
-      - "up"
-    depends_on:
-      user-service-mysql:
-        condition: service_healthy
-    restart: no
-    networks:
-      - quicket-net
-  booking-service-api:
-    build:
-      context: ../booking-service
-      dockerfile: Dockerfile.dev
-    container_name: quicket-booking-service-api
-    volumes:
-      - ../booking-service:/app
-      - quicket-booking-service-go-mod:/go/pkg/mod
-    env_file:
-      - ../booking-service/.env
-    # ports: -"8081:8081"
-    depends_on:
-      - booking-service-mysql
-    networks:
-      - quicket-net
-  booking-service-mysql:
-    image: mysql:8.0
-    container_name: booking-service-mysql
-    restart: always
-    env_file:
-      - ../booking-service/.env
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3309:3306"
-    volumes:
-      - quicket-booking-service-mysql:/var/lib/mysql
-    networks:
-      - quicket-net
-  booking-service-migrate:
-    image: migrate/migrate
-    container_name: quicket-booking-service-migrate
-    env_file:
-      - ../booking-service/.env
-    volumes:
-      - ../booking-service/migrations: ./migrations
-    depends_on:
-      - booking-service-mysql
-    restart: no
-    networks:
-      - quicket-net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${USER_MYSQL_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 networks:
   quicket-net:
     driver: bridge
+    name: quicket-net
 volumes:
-  quicket-monolith-mysql-data:
-  quicket-monolith-go-mod:
-  quicket-user-service-go-mod:
-  quicket-user-service-mysql:
-  rabbitmq_data:
-  rabbitmq_logs:
+  quicket-user-go-mod:
+  quicket-user-mysql:

@@ -12,11 +12,11 @@ type ServerConfig struct {
 }
 
 type DBConfig struct {
-	DBHost     string `mapstructure:"MONOLITH_DB_HOST"`
-    DBPort     string `mapstructure:"MONOLITH_DB_PORT"`
-    DBUser     string `mapstructure:"MONOLITH_DB_USER"`
-    DBPassword string `mapstructure:"MONOLITH_DB_PASSWORD"`
-    DBName     string `mapstructure:"MONOLITH_DB_NAME"`
+	DBHost     string `mapstructure:"MONOLITH_MYSQL_HOST"`
+    DBPort     string `mapstructure:"MONOLITH_MYSQL_PORT"`
+    DBUser     string `mapstructure:"MONOLITH_MYSQL_USER"`
+    DBPassword string `mapstructure:"MONOLITH_MYSQL_PASSWORD"`
+    DBName     string `mapstructure:"MONOLITH_MYSQL_NAME"`
 }
 
 type LogConfig struct {

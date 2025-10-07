@@ -6,12 +6,12 @@ import (
 )
 
 type MySQLConfig struct {
-	Host     string `mapstructure:"MYSQL_HOST" default:"localhost"`
-	Port     string `mapstructure:"MYSQL_PORT" default:"3306"`
-	User     string `mapstructure:"MYSQL_USER" default:"root"`
-	Password string `mapstructure:"MYSQL_PASSWORD" default:""`
-	Database string `mapstructure:"MYSQL_DATABASE"`
-	Charset  string `mapstructure:"MYSQL_CHARSET" default:"utf8mb4"`
+	Host     string `mapstructure:"USER_MYSQL_HOST" default:"localhost"`
+	Port     string `mapstructure:"USER_MYSQL_PORT" default:"3306"`
+	User     string `mapstructure:"USER_MYSQL_USER" default:"root"`
+	Password string `mapstructure:"USER_MYSQL_PASSWORD" default:""`
+	Database string `mapstructure:"USER_MYSQL_DATABASE"`
+	Charset  string `mapstructure:"USER_MYSQL_CHARSET" default:"utf8mb4"`
 }
 
 func (m *MySQLConfig) DSN() string {
