@@ -129,7 +129,7 @@ func (r *UserRepository) EmailExists(ctx context.Context, email string) bool {
 }
 
 func isConnectionError(err error) bool {
-    // Implement proper connection error detection
+    // Checking connection error
     return strings.Contains(err.Error(), "connection refused") || 
            errors.Is(err, context.DeadlineExceeded)
 }

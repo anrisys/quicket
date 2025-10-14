@@ -3,6 +3,7 @@ package internal
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/anrisys/quicket/user-service/pkg/errs"
 	"github.com/gin-gonic/gin"
@@ -203,6 +204,25 @@ func (h *UserHandler) GetUserByPublicID(c *gin.Context)  {
 			Message: "Get user by public id successful",
 		},
 		Data: *user,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// HealthCheck godoc
+// @Summary Health Check
+// @Description Check if the service is healthy
+// @Tags health
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]any
+// @Router /api/v1/health [get]
+func (h *UserHandler) HealthCheck(c *gin.Context) {
+	response := gin.H{
+		"status": "healthy",
+		"service": "user-api",
+		"timestamp": time.Now().Unix(),
+		"version": "1.0.0",
 	}
 
 	c.JSON(http.StatusOK, response)

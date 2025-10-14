@@ -1,9 +1,10 @@
 package config
 
 type Config struct {
-	Bcrypt *BcryptConfig
-	Server *ServerConfig
-	Mysql *MySQLConfig
-	Log *LogConfig
-	JWT *JWTConfig
+	Bcrypt         *BcryptConfig
+	Server         *ServerConfig
+	Mysql          *MySQLConfig
+	Log            *LogConfig
+	JWT            *JWTConfig
+	RabbitMQConfig *RabbitMQConfig
 }

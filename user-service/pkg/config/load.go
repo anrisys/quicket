@@ -41,12 +41,18 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	var rabbitMQConfig RabbitMQConfig
+	if err := viper.Unmarshal(&rabbitMQConfig); err != nil {
+		return nil, err
+	}
+
 	cfg := &Config{
 		Bcrypt: &bcryptConfig,
 		Server: &serverConfig,
 		Mysql: &mysqlConfig,
 		Log: &logConfig,
 		JWT: &jwtConfig,
+		RabbitMQConfig: &rabbitMQConfig,
 	}
 
 	if err := validateConfig(cfg); err != nil {
@@ -67,6 +73,9 @@ func validateConfig(config *Config) error {
 		return err
 	}
 	if err := config.Bcrypt.Validate(); err != nil {
+		return err
+	}
+	if err := config.RabbitMQConfig.Validate(); err != nil {
 		return err
 	}
 	return nil

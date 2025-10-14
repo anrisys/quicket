@@ -9,6 +9,7 @@ COMPOSE_DIR := docker
 USER_SERVICE_DIR := user-service
 
 .PHONY: all up down check-env clean rebuild-all \
+	gateway-up gateway-logs gateway-restart \
 	build-base-image build-base-image-if-not-exists \
 	build-user-service run-user-service migrate-user-up migrate-user-down migrate-user-version \
 
@@ -70,6 +71,17 @@ build-base-image-if-not-exists: check-env
 		make build-base-image; \
 	fi
 # ======================================== END OF BASE IMAGE ========================================
+
+# ======================================== START OF API GATEWAY COMMANDS ========================================
+gateway-up: 
+	docker-compose -f $(COMPOSE_DIR)/docker-compose.dev.yml up -d api-gateway
+
+gateway-logs: 
+	docker-compose -f $(COMPOSE_DIR)/docker-compose.dev.yml logs -f api-gateway
+
+gateway-restart: 
+	docker-dompose -f $(COMPOSE_DIR)/docker-compose.dev.yml restart api-gateway
+# ======================================== END OF API GATEWAY COMMANDS ========================================
 
 # ======================================== START OF USER SERVICES ======================================== 
 # Default values (optional safety net)

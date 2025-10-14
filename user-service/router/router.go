@@ -52,6 +52,7 @@ func SetupRouter(app *di.UserServiceApp) *gin.Engine {
 func registerRoutes(r *gin.Engine, app *di.UserServiceApp) {
 	public := r.Group("/api/v1")
 	{
+		public.GET("/health", app.Handler.HealthCheck)
 		public.POST("/register", app.Handler.Register)
 		public.POST("/login", app.Handler.Login)
 	}
