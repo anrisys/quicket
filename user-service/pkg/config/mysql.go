@@ -10,7 +10,7 @@ type MySQLConfig struct {
 	Port     string `mapstructure:"USER_MYSQL_PORT" default:"3306"`
 	User     string `mapstructure:"USER_MYSQL_USER" default:"root"`
 	Password string `mapstructure:"USER_MYSQL_PASSWORD" default:""`
-	Database string `mapstructure:"USER_MYSQL_DATABASE"`
+	Database string `mapstructure:"USER_MYSQL_DB_NAME"`
 	Charset  string `mapstructure:"USER_MYSQL_CHARSET" default:"utf8mb4"`
 }
 
