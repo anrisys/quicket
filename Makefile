@@ -17,8 +17,10 @@ USER_SERVICE_DIR := user-service
         build-user-service run-user-service \
         migrate-user-up migrate-user-down migrate-user-version \
 		personal-dev team-dev build-images down clean \
-		restart-user-api logs-user-api \
-		user-shell-db
+		build-booking-image build-api-gateway \
+		restart-user-api logs-user-api user-shell-db \
+		restart-rabbitmq rabbitmq-logs \
+		restart-booking-api logs-booking-api booking-shell-db \
 
 # ========================================
 # HELP COMMAND
@@ -187,6 +189,21 @@ build-images:
 	# User service
 	docker build -t ${USER_IMAGE_NAMETAG} -f user-service/Dockerfile.dev ./user-service
 
+	# Booking service
+	docker build -t ${BOOKING_IMAGE_NAMETAG} -f booking-service/Dockerfile.dev ./booking-service
+
+## build-booking-image: Build booking service image
+build-booking-image: 
+	@echo "📦 Building booking service image..."
+	# Booking service
+	docker build -t ${BOOKING_IMAGE_NAMETAG} -f booking-service/Dockerfile.dev ./booking-service
+
+## build-api-gateway: Build api gateway image
+build-api-gateway: 
+	@echo "📦 Building api gateway image..."
+	# API Gateway (with a Dockerfile in /api-gateway directory)
+	docker build -t ${API_GATEWAY_IMAGE_NAMETAG} ./api-gateway
+
 ## down: Stop all services
 down:
 	cd docker && docker compose down
@@ -202,7 +219,7 @@ clean:
 ## restart-user-api: Restart the user API service
 restart-user-api: 
 	@echo "Restarting user API..."
-	docker compose -f docker/docker-compose.dev.yml restart user-api
+	docker compose -f docker/docker-compose.yml restart user-api
 
 ## logs-user-api: Logs the user API service
 user-api-logs: 
@@ -211,3 +228,29 @@ user-api-logs:
 ## user-shell-db: Go into bash shell of user-mysql
 user-shell-db: 
 	cd docker && docker compose exec -it user-mysql bash
+
+## restart-booking-api: Restart the booking API service
+restart-booking-api: 
+	@echo "Restarting booking API..."
+	docker compose -f docker/docker-compose.yml restart booking-api
+
+## logs-booking-api: Logs the user API service
+booking-api-logs: 
+	cd docker && docker compose logs -f booking-api
+
+## booking-shell-db: Go into bash shell of booking-mysql
+booking-shell-db: 
+	cd docker && docker compose exec -it booking-mysql bash
+
+# ========================================
+# MESSAGE BROKER
+# ========================================
+
+## restart-rabbitmq: Restart message broker
+restart-rabbitmq: 
+	@echo "Restarting rabbitmq..."
+	docker compose -f docker/docker-compose.yml restart rabbitmq
+
+## rabbitmq-logs: Logs the user message broker
+rabbitmq-logs: 
+	cd docker && docker compose logs -f rabbitmq

@@ -50,6 +50,7 @@ func SetupRouter(app *di.App) *gin.Engine {
 }
 
 func registerRoutes(r *gin.Engine, app *di.App) {
+	r.GET("/api/v1/bookings/health", app.Handler.HealthCheck)
 	protected := r.Group("/api/v1/bookings")
 	protected.Use(middleware.JWTAuthMiddleware(app.Config.JWT.JWTSecret))
 	{

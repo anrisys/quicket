@@ -6,6 +6,7 @@ import (
 	"log"
 	"quicket/booking-service/pkg/di"
 	"quicket/booking-service/router"
+	"runtime/debug"
 )
 
 // @title Quicket Bookings Service API
@@ -24,11 +25,13 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token
 
-// @host localhost:8082
+// @host localhost:8091
 // @BasePath /api/v1/bookings
 func main() {
 	app, err := di.InitializeApp()
     if err != nil {
+        log.Fatal(err)
+        log.Printf("Full stack trace:\n%s", debug.Stack())
         log.Fatalf("Failed to initialize app: %v", err)
     }
 

@@ -1,6 +1,8 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
 func Load() (*Config, error) {
 	viper.SetConfigName(".env")
@@ -42,7 +44,7 @@ func Load() (*Config, error) {
 	}
 
 	var clientsConfig ClientServices
-	if err := viper.Unmarshal(clientsConfig); err != nil {
+	if err := viper.Unmarshal(&clientsConfig); err != nil {
 		return nil, err
 	}
 
@@ -64,7 +66,6 @@ func Load() (*Config, error) {
 	if err := validateConfig(cfg); err != nil {
 		return nil, err
 	}
-
 	return cfg, nil
 }
 

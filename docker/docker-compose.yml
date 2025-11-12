@@ -11,12 +11,27 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      booking-api:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 5s
+  quicket-redis:
+    image: redis:8.2.2-alpine3.22
+    container_name: quicket-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - redis_data:/data
   user-mysql:
     image: mysql:8.0.43-debian
     container_name: user-mysql
@@ -50,6 +65,39 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+  booking-mysql:
+    image: mysql:8.0.43-debian
+    container_name: booking-mysql
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${BOOKING_MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${BOOKING_MYSQL_DB_NAME}
+      MYSQL_USER: ${BOOKING_MYSQL_USER}
+      MYSQL_PASSWORD: ${BOOKING_MYSQL_PASSWORD}
+    ports:
+      - "${BOOKING_MYSQL_EXTERNAL_PORT}:3306"
+    volumes:
+      - quicket-booking-mysql:/var/lib/mysql
+    networks:
+      - quicket-net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${BOOKING_MYSQL_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
   rabbitmq:
     image: rabbitmq:4.0-management
     container_name: rabbitmq
@@ -71,12 +119,15 @@ services:
       timeout: 20s
       retries: 5
       start_period: 30s
+    networks:
+      - quicket-net
 networks:
   quicket-net:
     driver: bridge
     name: quicket-net
 volumes:
-  quicket-user-go-mod:
   quicket-user-mysql:
+  quicket-booking-mysql:
   rabbitmq_data:
   rabbitmq_logs:
+  redis_data:

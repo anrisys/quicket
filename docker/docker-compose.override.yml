@@ -21,3 +21,38 @@ services:
       start_period: 10s
     networks:
       - quicket-net
+  booking-api:
+    image: ${BOOKING_IMAGE_NAMETAG}
+    container_name: quicket-booking-api
+    volumes:
+      - ../booking-service:/app
+      - quicket-booking-go-mod:/go/pkg/mod
+    env_file:
+      - .env
+    ports:
+      - "8091:8091"
+    depends_on:
+      booking-mysql:
+        condition: service_healthy
+      quicket-redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:8091/api/v1/bookings/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - quicket-net
+volumes:
+  quicket-user-go-mod:
+  quicket-booking-go-mod:

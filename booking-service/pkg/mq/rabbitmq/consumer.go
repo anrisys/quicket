@@ -61,8 +61,6 @@ func (q QueueConfig) WithDLQ(deadLetterExchange string) QueueConfig {
 }
 
 func (c *Consumer) DeclareQueue(config QueueConfig) (amqp.Queue, error) {
-    defer c.Channel.Close()
-
     return c.Channel.QueueDeclare(
         config.Name,
         config.Durable,
