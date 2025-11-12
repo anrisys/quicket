@@ -1,4 +1,4 @@
-package redis
+package database
 
 import (
 	"context"
@@ -10,31 +10,31 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type Client struct {
+type RedisClient struct {
 	client *redis.Client
 }
 
-func NewClient(cfg *config.Redis) *Client {
+func NewRedisClient(cfg *config.Config) *RedisClient {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
-		Password: cfg.Password,
-		DB: cfg.DB,
+		Addr: cfg.Redis.Addr(),
+		Password: cfg.Redis.Password,
+		DB: cfg.Redis.DB,
 	})
 
-	return &Client{ client: rdb }
+	return &RedisClient{ client: rdb }
 }
 
 const EventKey = "event"
 
-func (c *Client) Connect(ctx context.Context) error {
+func (c *RedisClient) Connect(ctx context.Context) error {
 	return c.client.Ping(ctx).Err()
 }
 
-func (c *Client) Close() error {
+func (c *RedisClient) Close() error {
 	return c.client.Close()
 }
 
-func (c *Client) Get(ctx context.Context, key string, dest any) error {
+func (c *RedisClient) Get(ctx context.Context, key string, dest any) error {
 	val, err := c.client.Get(ctx, key).Result()
 	if err == redis.Nil {
 		return nil
@@ -46,7 +46,7 @@ func (c *Client) Get(ctx context.Context, key string, dest any) error {
 	return json.Unmarshal([]byte(val), dest)
 }
 
-func (c *Client) Set(ctx context.Context, key string, value any, ttl time.Duration) error {
+func (c *RedisClient) Set(ctx context.Context, key string, value any, ttl time.Duration) error {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return fmt.Errorf("failed to marshal value: %w", err)

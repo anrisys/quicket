@@ -4,19 +4,17 @@ import (
 	"github.com/anrisys/quicket/event-service/internal"
 	"github.com/anrisys/quicket/event-service/pkg/config"
 	"github.com/anrisys/quicket/event-service/pkg/database"
-	"github.com/anrisys/quicket/event-service/pkg/redis"
 	"github.com/google/wire"
 )
 
 var (
 	ConfigSet = wire.NewSet(
 		config.Load,
-		database.ConnectMySQL,
 		config.NewZerolog,
-		config.LoadRedisConfig,
-		redis.NewClient,
+		database.ConnectMySQL,
+		database.NewRedisClient,
 	)
-	EventAppProviderSet = wire.NewSet(
+	AppProviderSet = wire.NewSet(
 		ConfigSet,
 		internal.NewEventRepository,
 		internal.NewUserServiceClient,
@@ -25,6 +23,6 @@ var (
 		wire.Bind(new(internal.UserReader), new(*internal.UserServiceClient)),
 		wire.Bind(new(internal.EventRepositoryInterface), new(*internal.EventRepository)),
 		wire.Bind(new(internal.EventServiceInterface), new(*internal.EventService)),
-		wire.Struct(new(EventServiceApp), "*"),
+		wire.Struct(new(App), "*"),
 	)
 )

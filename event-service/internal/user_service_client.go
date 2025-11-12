@@ -18,11 +18,11 @@ type UserReader interface {
 
 
 type UserServiceClient struct {
-	cfg    *config.AppConfig
+	cfg    *config.Config
 	httpClient *http.Client
 }
 
-func NewUserServiceClient(cfg *config.AppConfig) *UserServiceClient  {
+func NewUserServiceClient(cfg *config.Config) *UserServiceClient  {
 	return &UserServiceClient{
 		cfg: cfg,
 		httpClient: &http.Client{
@@ -32,7 +32,7 @@ func NewUserServiceClient(cfg *config.AppConfig) *UserServiceClient  {
 }
 
 func (c *UserServiceClient) GetUserID(ctx context.Context, publicID string) (*uint, error) {
-	baseURL := c.cfg.UserServiceURL
+	baseURL := c.cfg.Clients.UserServiceURL
 	url := fmt.Sprintf("%s/api/v1/users/%s/primary-id", baseURL, publicID)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -71,7 +71,7 @@ func (c *UserServiceClient) GetUserID(ctx context.Context, publicID string) (*ui
 }
 
 func (c *UserServiceClient) FindUserByPublicID(ctx context.Context, publicID string) (*UserDTO, error){
-	baseURL := c.cfg.UserServiceURL
+	baseURL := c.cfg.Clients.UserServiceURL
 	url := fmt.Sprintf("%s/api/v1/users/public/%s", baseURL, publicID)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)

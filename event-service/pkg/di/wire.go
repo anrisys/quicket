@@ -5,7 +5,7 @@ package di
 
 import "github.com/google/wire"
 
-func InitializeEventServiceApp() (*EventServiceApp, error) {
-	wire.Build(EventAppProviderSet)
-	return &EventServiceApp{}, nil
+func InitializeApp() (*App, error) {
+	wire.Build(AppProviderSet)
+	return &App{}, nil
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/anrisys/quicket/event-service/pkg/config"
 )
 
-type EventServiceApp struct {
-	Config  *config.AppConfig
+type App struct {
+	Config  *config.Config
 	Handler *internal.EventHandler
 }

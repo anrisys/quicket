@@ -10,33 +10,28 @@ import (
 	"github.com/anrisys/quicket/event-service/internal"
 	"github.com/anrisys/quicket/event-service/pkg/config"
 	"github.com/anrisys/quicket/event-service/pkg/database"
-	"github.com/anrisys/quicket/event-service/pkg/redis"
 )
 
 // Injectors from wire.go:
 
-func InitializeEventServiceApp() (*EventServiceApp, error) {
-	appConfig, err := config.Load()
+func InitializeApp() (*App, error) {
+	configConfig, err := config.Load()
 	if err != nil {
 		return nil, err
 	}
-	db, err := database.ConnectMySQL(appConfig)
+	db, err := database.ConnectMySQL(configConfig)
 	if err != nil {
 		return nil, err
 	}
-	logger := config.NewZerolog(appConfig)
+	logger := config.NewZerolog(configConfig)
 	eventRepository := internal.NewEventRepository(db, logger)
-	userServiceClient := internal.NewUserServiceClient(appConfig)
-	configRedis, err := config.LoadRedisConfig()
-	if err != nil {
-		return nil, err
-	}
-	client := redis.NewClient(configRedis)
-	eventService := internal.NewEventService(eventRepository, userServiceClient, logger, client)
+	userServiceClient := internal.NewUserServiceClient(configConfig)
+	redisClient := database.NewRedisClient(configConfig)
+	eventService := internal.NewEventService(eventRepository, userServiceClient, logger, redisClient)
 	eventHandler := internal.NewEventHandler(eventService, logger)
-	eventServiceApp := &EventServiceApp{
-		Config:  appConfig,
+	app := &App{
+		Config:  configConfig,
 		Handler: eventHandler,
 	}
-	return eventServiceApp, nil
+	return app, nil
 }

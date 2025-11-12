@@ -14,7 +14,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SetupRouter(app *di.EventServiceApp) *gin.Engine {
+func SetupRouter(app *di.App) *gin.Engine {
 	r := gin.New()
 
 	// Logging
@@ -49,12 +49,12 @@ func SetupRouter(app *di.EventServiceApp) *gin.Engine {
 	return r
 }
 
-func registerRoutes(r *gin.Engine, app *di.EventServiceApp) {
+func registerRoutes(r *gin.Engine, app *di.App) {
 	public := r.Group("/api/v1/events")
 	public.GET("/:publicID", app.Handler.GetEventByPublicID)
 	
 	protected := r.Group("/api/v1/events")
-	protected.Use(middleware.JWTAuthMiddleware(app.Config.Security.JWTSecret))
+	protected.Use(middleware.JWTAuthMiddleware(app.Config.JWT.JWTSecret))
 	{
 		protected.POST("/", app.Handler.Create)
 	}

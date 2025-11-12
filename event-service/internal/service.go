@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/anrisys/quicket/event-service/pkg/database"
 	"github.com/anrisys/quicket/event-service/pkg/errs"
-	redisClient "github.com/anrisys/quicket/event-service/pkg/redis"
 	"github.com/anrisys/quicket/event-service/pkg/util"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
@@ -25,10 +25,10 @@ type EventService struct {
 	repo   EventRepositoryInterface
 	users  UserReader
 	logger zerolog.Logger
-	redis *redisClient.Client
+	redis *database.RedisClient
 }
 
-func NewEventService(repo EventRepositoryInterface, users UserReader, logger zerolog.Logger, redis *redisClient.Client) *EventService {
+func NewEventService(repo EventRepositoryInterface, users UserReader, logger zerolog.Logger, redis *database.RedisClient) *EventService {
 	return &EventService{
 		repo:   repo,
 		users:  users,
@@ -84,7 +84,7 @@ func (s *EventService) FindByID(ctx context.Context, id uint) (*EventDTOWithID, 
 
 func (s *EventService) FindByPublicID(ctx context.Context, publicID string) (*EventDTO, error) {
 	var event *EventDTO
-	cacheKey := fmt.Sprintf("%s:publicID:%s", redisClient.EventKey, publicID)
+	cacheKey := fmt.Sprintf("%s:publicID:%s", database.EventKey, publicID)
 	err := s.redis.Get(ctx, cacheKey, event)
 	if err == nil {
 		s.logger.Debug().Msgf("Cache hit for event with public ID: %s", publicID)

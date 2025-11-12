@@ -27,7 +27,7 @@ import (
 // @host localhost:8082
 // @BasePath /api/v1/events
 func main() {
-	app, err := di.InitializeEventServiceApp()
+	app, err := di.InitializeApp()
     if err != nil {
         log.Fatalf("Failed to initialize app: %v", err)
     }
