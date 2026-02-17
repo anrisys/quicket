@@ -56,4 +56,6 @@ func registerRoutes(r *gin.Engine, app *di.App) {
 	{
 		protected.POST("/", app.Handler.CreateBooking)
 	}
+	admin := r.Group("/api/v1/admin/bookings")
+	admin.Use(middleware.JWTAuthMiddleware(app.Config.JWT.JWTSecret))
 }
