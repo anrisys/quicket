@@ -1,5 +1,6 @@
 package consumer
 
+/*
 import (
 	"context"
 	"encoding/json"
@@ -69,7 +70,7 @@ func (c *EventConsumer) handleMessage(msg amqp.Delivery) {
 			Str("routing_key", msg.RoutingKey).
 			Str("message_id", msg.MessageId).
 			Logger()
-	
+
 	// Acknowledge message when done (or nack on error)
     defer func() {
         if err := recover(); err != nil {
@@ -245,3 +246,4 @@ func (c *EventConsumer) handleSeatsUpdated(msg amqp.Delivery) error {
 func (c *EventConsumer) Stop() {
     c.logger.Info().Msg("Event consumer stopping")
 }
+*/

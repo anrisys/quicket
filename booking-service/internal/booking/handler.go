@@ -2,19 +2,21 @@ package booking
 
 import (
 	"net/http"
-	"quicket/booking-service/pkg/errs"
+	"quicket/booking-service/internal/booking/dto"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	srv ServiceInterface
+	usu *UserUsecase
+	adu *AdminUsecase
 }
 
-func NewHandler(srv ServiceInterface) *Handler {
+func NewHandler(usu *UserUsecase, adu *AdminUsecase) *Handler {
 	return &Handler{
-		srv: srv,
+		usu: usu,
+		adu: adu,
 	}
 }
 
@@ -25,7 +27,7 @@ func NewHandler(srv ServiceInterface) *Handler {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param request body CreateBookingRequest true "Create booking creation data" 
+// @Param request body CreateBookingRequest true "Create booking creation data"
 // @Success 201 {object} CreateBookingSuccessResponse
 // @Failure 400 {object} errs.ErrorResponse "Validation Error"
 // @Failure 401 {object} errs.ErrorResponse "Unauthorized"
@@ -36,26 +38,20 @@ func (h *Handler) CreateBooking(c *gin.Context) {
 	ctx := c.Request.Context()
 	userPublicID := c.GetString("publicID")
 
-	var req *CreateBookingRequest
+	var req *dto.CreateBookingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		validationErr := errs.NewValidationError("Invalid login data", err)
-		c.Error(validationErr)
+		valErr := NewAppError(http.StatusBadRequest, CodeValidation, "invalid booking request data", err)
+		c.Error(valErr)
 		return
 	}
 
-	booking, err := h.srv.Create(ctx, req, userPublicID)
+	booking, err := h.usu.CreateBooking(ctx, req, userPublicID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response := CreateBookingSuccessResponse{
-		ResponseSuccess: ResponseSuccess{
-			Code: "SUCCESS",
-			Message: "Booking created successfully",
-		},
-		Data: *booking,
-	}
+	response := dto.NewSuccessResponse(booking)
 
 	c.JSON(http.StatusCreated, response)
 }
@@ -70,11 +66,55 @@ func (h *Handler) CreateBooking(c *gin.Context) {
 // @Router /api/v1/health [get]
 func (h *Handler) HealthCheck(c *gin.Context) {
 	response := gin.H{
-		"status": "healthy",
-		"service": "user-api",
+		"status":    "healthy",
+		"service":   "user-api",
 		"timestamp": time.Now().Unix(),
-		"version": "1.0.0",
+		"version":   "1.0.0",
 	}
 
 	c.JSON(http.StatusOK, response)
 }
+
+/*
+// Create godoc
+// @Summary Create new booking
+// @Description Create a new booking
+// @Tags Bookings
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body CreateBookingRequest true "Create booking creation data"
+// @Success 201 {object} CreateBookingSuccessResponse
+// @Failure 400 {object} errs.ErrorResponse "Validation Error"
+// @Failure 401 {object} errs.ErrorResponse "Unauthorized"
+// @Failure 409 {object} errs.ErrorResponse "Conflict Error"
+// @Failure 500 {object} errs.ErrorResponse "Internal Server Error"
+// @Router /api/v1/bookings/ [post]
+func (h *Handler) AdminBookingList(c *gin.Context) {
+	ctx := c.Request.Context()
+	userPublicID := c.GetString("publicID")
+
+	var req *dto.AdminBookingListRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		validationErr := errs.NewValidationError("Invalid login data", err)
+		c.Error(validationErr)
+		return
+	}
+
+	booking, err := h.srv.Create(ctx, req, userPublicID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response := CreateBookingSuccessResponse{
+		ResponseSuccess: ResponseSuccess{
+			Code:    "SUCCESS",
+			Message: "Booking created successfully",
+		},
+		Data: *booking,
+	}
+
+	c.JSON(http.StatusCreated, response)
+}
+*/

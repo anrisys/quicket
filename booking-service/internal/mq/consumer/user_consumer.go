@@ -1,5 +1,6 @@
 package consumer
 
+/*
 import (
 	"context"
 	"encoding/json"
@@ -58,7 +59,7 @@ func (u *UserConsumer) Start(ctx context.Context) error {
 		Strs("routing_keys", routingKeys).
 		Msg("user consumer setup complete")
 
-	
+
 	return u.rabbitConsumer.StartConsuming(ctx, queue.Name, u.handleMessage)
 }
 
@@ -77,29 +78,29 @@ func (u *UserConsumer) handleMessage(msg amqp.Delivery) {
 	}()
 
 	switch msg.RoutingKey {
-	case "user.created": 
+	case "user.created":
 		if err := u.handleCreatedMessage(msg); err != nil {
 			log.Error().Err(err).Msg("failed to handle user creation")
 			msg.Nack(false, true)
-			return 
+			return
 		}
-	
-	case "user.deletion": 
+
+	case "user.deletion":
 		if err := u.handleDeletedMessage(msg); err != nil {
 			log.Error().Err(err).Msg("failed to handle user deletion")
 			msg.Nack(false, true)
 			return
 		}
-	
-	default: 
+
+	default:
 		log.Warn().Msg("unknown routing key, acknowleging and ignoring")
 	}
-	
+
 	msg.Ack(false)
 }
 
 func (u *UserConsumer) handleCreatedMessage(msg amqp.Delivery) error {
-	var userMsg UserCreatedMessage	
+	var userMsg UserCreatedMessage
 	if err := json.Unmarshal(msg.Body, &userMsg); err != nil {
 		return fmt.Errorf("failed to unmarshal user message: %w", err)
 	}
@@ -140,3 +141,4 @@ func (u *UserConsumer) handleDeletedMessage(msg amqp.Delivery) error {
 
 	return nil
 }
+*/

@@ -1,12 +1,6 @@
 package rabbitmq
 
-import (
-	"context"
-
-	amqp "github.com/rabbitmq/amqp091-go"
-	"github.com/rs/zerolog"
-)
-
+/*
 type Consumer struct {
 	Channel *amqp.Channel
 	logger zerolog.Logger
@@ -97,14 +91,14 @@ func (c *Consumer) StartConsuming(ctx context.Context, queueName string, handler
         c.Channel.Close() // Close Channel if setup fails
         return err
     }
-    
+
     // Start message processing in goroutine
     go func() {
         for msg := range messages {
             handler(msg)
         }
     }()
-    
+
     return nil
 }
 
@@ -114,3 +108,4 @@ func (c *Consumer) Close() error {
 	c.logger.Info().Msg("Closing consumer channel")
 	return c.Channel.Close()
 }
+*/

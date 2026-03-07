@@ -1,5 +1,6 @@
 package producer
 
+/*
 import (
 	"fmt"
 	"quicket/booking-service/internal/mq"
@@ -45,3 +46,4 @@ func (evp *EventProducer) PublishAvailableSeatsUpdate(eventID, seats uint) error
 	log.Info().Msgf("Published seats updated: %s", string(body))
 	return nil
 }
+*/

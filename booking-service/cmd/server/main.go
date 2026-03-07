@@ -1,12 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
-	"quicket/booking-service/pkg/di"
+	"quicket/booking-service/internal/booking"
+	"quicket/booking-service/internal/infrastructure"
+	"quicket/booking-service/internal/logger"
+	"quicket/booking-service/internal/snapshot"
 	"quicket/booking-service/router"
-	"runtime/debug"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // @title Quicket Bookings Service API
@@ -28,29 +30,73 @@ import (
 // @host localhost:8091
 // @BasePath /api/v1/bookings
 func main() {
-	app, err := di.InitializeApp()
-    if err != nil {
-        log.Fatal(err)
-        log.Printf("Full stack trace:\n%s", debug.Stack())
-        log.Fatalf("Failed to initialize app: %v", err)
-    }
+	logger := logger.NewLogger()
 
-    go func ()  {
-        if err := app.EventConsumer.Start(context.Background()); err != nil {
-            log.Fatalf("Failed to start event consumer: %v", err)
-        }
-    }()
+	cfg, err := infrastructure.Load()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed load configuration")
+	}
 
-    go func ()  {
-        if err := app.UserConsumer.Start(context.Background()); err != nil {
-            log.Fatalf("Failed to start event consumer: %v", err)
-        }
-    }()
-    
-    r := router.SetupRouter(app)
-    
-    addr := fmt.Sprintf(":%s", app.Config.Server.Port)
+	// DB
+	db, err := infrastructure.NewMySQL(cfg)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to initialize database")
+	}
+
+	// RabbitMQ
+	conn, err := amqp.Dial(cfg.RabbitMQ.URL())
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to connect rabbitmq")
+	}
+
+	rabbitmqPublisher, err := infrastructure.NewRabbitMQPublisher(
+		conn,
+		cfg.RabbitMQ.BookingServiceExchange,
+	)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to initialize rabbitmq publisher")
+	}
+
+	// Repositories
+	bwr := booking.NewBookingWriteRepoImpl(db, logger)
+	brr := booking.NewBookingReadRepo(db, logger)
+
+	// Clients
+	ecs := infrastructure.NewHTTPEventClient(cfg.Clients.EventServiceURL)
+
+	// Snapshot
+	esr := snapshot.NewEvSnapshotRepoImpl(db, logger)
+	ess := snapshot.NewEventSnapshotService(esr, logger)
+
+	usr := snapshot.NewUserSnapshotRepoImpl(db, logger)
+	uss := snapshot.NewUserSnapshotService(usr, logger)
+
+	// Usecases
+	usu := booking.NewUserUsecase(
+		bwr,
+		brr,
+		logger,
+		ecs,
+		rabbitmqPublisher,
+		ess,
+		uss,
+	)
+
+	adu := booking.NewAdminUsecase(brr, logger)
+
+	// Handler
+	handler := booking.NewHandler(usu, adu)
+
+	// Router
+	r := router.SetupRouter(handler, logger, cfg.JWT.JWTSecret)
+
+	addr := fmt.Sprintf(":%s", cfg.Server.Port)
+
+	logger.Info().
+		Str("addr", addr).
+		Msg("starting server")
+
 	if err := r.Run(addr); err != nil {
-        log.Fatalf("Server failed :%v", err)
-    }
+		logger.Fatal().Err(err).Msg("server failed")
+	}
 }

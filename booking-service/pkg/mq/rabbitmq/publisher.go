@@ -1,9 +1,6 @@
 package rabbitmq
 
-import (
-	amqp "github.com/rabbitmq/amqp091-go"
-)
-
+/*
 type Publisher struct {
 	Channel *amqp.Channel
 }
@@ -46,4 +43,4 @@ func (p *Publisher) Publish(exchange, routingKey string, body []byte) error {
 // Close closes the publisher channel.
 func (p *Publisher) Close() error {
 	return p.Channel.Close()
-}
+}*/

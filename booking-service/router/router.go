@@ -1,36 +1,20 @@
 package router
 
 import (
-	"fmt"
 	"quicket/booking-service/internal"
-	"quicket/booking-service/pkg/di"
-	"quicket/booking-service/pkg/middleware"
-	"time"
+	"quicket/booking-service/internal/booking"
+	"quicket/booking-service/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SetupRouter(app *di.App) *gin.Engine {
+func SetupRouter(h *booking.Handler, l zerolog.Logger, jwtSecret string) *gin.Engine {
 	r := gin.New()
-
-	// Logging
-	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
-			param.ClientIP,
-			param.TimeStamp.Format(time.RFC1123),
-			param.Method,
-			param.Path,
-			param.Request.Proto,
-			param.StatusCode,
-			param.Latency,
-			param.Request.UserAgent(),
-			param.ErrorMessage,
-		)
-	}))
 
 	// Custom validator
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -38,24 +22,24 @@ func SetupRouter(app *di.App) *gin.Engine {
 	}
 
 	// Middlewares
-	r.Use(middleware.ZerologLogger(), gin.Recovery(), middleware.ErrorMiddleware())
+	r.Use(
+		middleware.HTTPLogger(l),
+		gin.Recovery(),
+		middleware.ErrorMiddleware(),
+	)
 
 	// Swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Routes
-	registerRoutes(r, app)
-
-	return r
-}
-
-func registerRoutes(r *gin.Engine, app *di.App) {
-	r.GET("/api/v1/bookings/health", app.Handler.HealthCheck)
+	r.GET("/api/v1/bookings/health", h.HealthCheck)
 	protected := r.Group("/api/v1/bookings")
-	protected.Use(middleware.JWTAuthMiddleware(app.Config.JWT.JWTSecret))
+	protected.Use(middleware.JWTAuthMiddleware(jwtSecret))
 	{
-		protected.POST("/", app.Handler.CreateBooking)
+		protected.POST("/", h.CreateBooking)
 	}
 	admin := r.Group("/api/v1/admin/bookings")
-	admin.Use(middleware.JWTAuthMiddleware(app.Config.JWT.JWTSecret))
+	admin.Use(middleware.JWTAuthMiddleware(jwtSecret))
+
+	return r
 }

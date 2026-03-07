@@ -1,13 +1,6 @@
 package rabbitmq
 
-import (
-	"fmt"
-	"quicket/booking-service/pkg/config"
-
-	amqp "github.com/rabbitmq/amqp091-go"
-	"github.com/rs/zerolog"
-)
-
+/*
 type Client struct {
     conn    *amqp.Connection
     logger  zerolog.Logger
@@ -20,7 +13,7 @@ func NewClient(config *config.Config, logger zerolog.Logger) (*Client, error) {
         return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
     }
     logger.Info().Msg("RabbitMQ connected successfully")
-    
+
     return &Client{
         conn:    conn,
         logger:  logger,
@@ -44,7 +37,7 @@ func (c *Client) Close() error {
         c.logger.Warn().Err(err).Msg("Failed to close RabbitMQ connection")
         return err
     }
-    
+
     c.logger.Info().Msg("RabbitMQ connection closed")
     return nil
 }
@@ -71,4 +64,4 @@ func (c *Client) DeclareQueue(name string, args amqp.Table) (amqp.Queue, error) 
         args,  // arguments
     )
 }
-	*/
+*/
