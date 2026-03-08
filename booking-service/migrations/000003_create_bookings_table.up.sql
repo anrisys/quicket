@@ -9,7 +9,7 @@ CREATE TABLE bookings (
     total_price DECIMAL(12,2) NOT NULL,
     currency CHAR(3) NOT NULL DEFAULT 'USD',
 
-    status ENUM ('pending', 'success', 'failed', 'cancelled') 
+    status ENUM ('pending', 'success', 'failed', 'cancelled', 'expired') 
         NOT NULL DEFAULT 'pending',
 
     payment_method ENUM (

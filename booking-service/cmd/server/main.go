@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"quicket/booking-service/internal/booking"
 	"quicket/booking-service/internal/infrastructure"
@@ -86,6 +87,10 @@ func main() {
 
 	// Handler
 	handler := booking.NewHandler(usu, adu)
+
+	// Background jobs (worker)
+	worker := booking.NewWoker(brr, bwr, rabbitmqPublisher, logger)
+	go worker.Start(context.Background())
 
 	// Router
 	r := router.SetupRouter(handler, logger, cfg.JWT.JWTSecret)

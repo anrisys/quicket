@@ -39,6 +39,10 @@ func (r *RabbitMQPublisher) PublishBookingCancelled(
 	return r.publish(ctx, "booking.cancelled", event)
 }
 
+func (r *RabbitMQPublisher) ReleaseEventSeats(ctx context.Context, payload *booking.BookingReleaseSeats) error {
+	return r.publish(ctx, "booking.seats.release", payload)
+}
+
 func (r *RabbitMQPublisher) publish(
 	ctx context.Context,
 	routingKey string,

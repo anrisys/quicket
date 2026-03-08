@@ -25,3 +25,9 @@ type BookingRow struct {
 	UserFullName string `gorm:"column:user_full_name"`
 	UserEmail    string `gorm:"column:user_email"`
 }
+
+type ExpiredBookingRow struct {
+	ID            uint64 `gorm:"column:ID"`
+	EventPublicID string `gorm:"event_public_id"`
+	Seats         uint64 `gorm:"seats"`
+}

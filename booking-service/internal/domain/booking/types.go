@@ -10,6 +10,7 @@ const (
 	BookingStatusSuccess   BookingStatus = "success"
 	BookingStatusFailed    BookingStatus = "failed"
 	BookingStatusCancelled BookingStatus = "cancelled"
+	BookingStatusExpired   BookingStatus = "expired"
 
 	// Payment Method
 	PaymentMethodCreditCard   PaymentMethod = "credit_card"

@@ -10,3 +10,8 @@ type BookingCreatedEvent struct {
 type BookingCancelledEvent struct {
 	BookingPublicID string
 }
+
+type BookingReleaseSeats struct {
+	EventPublicID string
+	Seats         uint64
+}

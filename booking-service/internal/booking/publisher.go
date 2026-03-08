@@ -5,4 +5,5 @@ import "context"
 type EventPublisher interface {
 	PublishBookingCreated(ctx context.Context, payload BookingCreatedEvent) error
 	PublishBookingCancelled(ctx context.Context, payload BookingCancelledEvent) error
+	ReleaseEventSeats(ctx context.Context, payload *BookingReleaseSeats) error
 }

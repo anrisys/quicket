@@ -4,8 +4,8 @@ import (
 	"context"
 	"quicket/booking-service/internal/booking/dto"
 	"quicket/booking-service/internal/domain/booking"
+	"quicket/booking-service/internal/helper"
 	"quicket/booking-service/internal/snapshot"
-	"quicket/booking-service/internal/util"
 	"strconv"
 	"time"
 
@@ -55,7 +55,7 @@ func (uu *UserUsecase) CreateBooking(ctx context.Context, data *dto.CreateBookin
 		return nil, err
 	}
 
-	bookingPublicID, err := util.GeneratePublicID(ctx)
+	bookingPublicID, err := helper.GeneratePublicID(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -19,7 +19,7 @@ type Booking struct {
 	TotalPrice float64 `gorm:"type:decimal(12,2);not null"`
 	Currency   string  `gorm:"type:char(3);not null;default:USD"`
 
-	Status booking.BookingStatus `gorm:"type:enum('pending','success','failed','cancelled');not null;default:'pending';index:idx_bookings_status'"`
+	Status booking.BookingStatus `gorm:"type:enum('pending','success','failed','cancelled', 'expired');not null;default:'pending';index:idx_bookings_status'"`
 
 	PaymentMethod booking.PaymentMethod `gorm:"type:enum('credit_card','bank_transfer','e_wallet','cash');not null;index:idx_bookings_payment_method'"`
 
