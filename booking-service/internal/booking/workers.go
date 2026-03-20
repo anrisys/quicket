@@ -41,16 +41,17 @@ func (w *Worker) Start(ctx context.Context) {
 	}
 }
 
+// TODO: Directly ExpirePending with return id instead of retrieve it first
 func (w *Worker) processExpiredBooking(ctx context.Context) {
 	// Retrieve expired booking
-	expiredBookings, err := w.rr.RetrieveExpiredBookings(ctx, 100)
+	expiredBookings, err := w.rr.FindExpiredPending(ctx, 100)
 	if err != nil {
 		w.l.Error().Err(err).Msg("worker.ProcessExpiredBooking: retrieved expired bookings failed")
 		return
 	}
 
 	// Do bulk updation
-	err = w.wr.UpdateBookingStatusExpiration(ctx, 100)
+	err = w.wr.ExpirePending(ctx, 100)
 	if err != nil {
 		w.l.Error().Err(err).Msg("worker.ProcessExpiredBooking: update booking expiration failed")
 		return

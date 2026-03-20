@@ -20,7 +20,8 @@ e.g. "userRepo.GetByID: scan result: %w"
 */
 type BookingWriteRepository interface {
 	Create(ctx context.Context, b *Booking) error
-	UpdateBookingStatusExpiration(ctx context.Context, limit uint64) error
+	ExpirePending(ctx context.Context, limit uint64) error
+	Cancel(ctx context.Context, bookingID uint64) error
 }
 
 type BookingWriteRepoImpl struct {
@@ -37,10 +38,7 @@ func (r *BookingWriteRepoImpl) Create(ctx context.Context, b *Booking) error {
 }
 
 // Target SQL: UPDATE bookings SET status = 'expired' WHERE status = 'pending' and expired_at <= NOW() ORDER BY id desc LIMIT 100
-func (r *BookingWriteRepoImpl) UpdateBookingStatusExpiration(
-	ctx context.Context,
-	limit uint64,
-) error {
+func (r *BookingWriteRepoImpl) ExpirePending(ctx context.Context, limit uint64) error {
 	err := r.db.WithContext(ctx).
 		Model(&Booking{}).
 		Where("status = ?", booking.BookingStatusPending).
@@ -51,7 +49,21 @@ func (r *BookingWriteRepoImpl) UpdateBookingStatusExpiration(
 		Error
 
 	if err != nil {
-		return fmt.Errorf("repository_write.UpdateBookingStatusExpiration: query failed: %w", err)
+		return fmt.Errorf("repository_write.ExpirePending: query failed: %w", err)
+	}
+	return nil
+}
+
+func (r *BookingWriteRepoImpl) Cancel(ctx context.Context, bookingID uint64) error {
+	err := r.db.WithContext(ctx).
+		Model(&Booking{}).
+		Where("id = ?", bookingID).
+		Where("status = ?", booking.BookingStatusPending).
+		Update("status", booking.BookingStatusCancelled).
+		Error
+
+	if err != nil {
+		return fmt.Errorf("repository_write.Cancel: query failed: %w", err)
 	}
 	return nil
 }

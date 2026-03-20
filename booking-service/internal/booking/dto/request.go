@@ -56,3 +56,7 @@ type CreateBookingRequest struct {
 	PaymentMethod string `json:"payment_method" binding:"required"`
 	Channel       string `json:"channel" binding:"required"`
 }
+
+type CancelBookingRequest struct {
+	BookingID string `json:"booking_id" binding:"required"`
+}

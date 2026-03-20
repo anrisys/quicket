@@ -17,6 +17,8 @@ const (
 	CodeConflict     = "CONFLICT"
 	CodeInternal     = "INTERNAL_ERROR"
 	CodeUnauthorized = "UNAUTHORIZED"
+	CodeForbidden    = "FORBIDDEN"
+	CodeBadRequest   = "BAD_REQUEST"
 )
 
 type AppError struct {

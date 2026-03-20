@@ -45,3 +45,8 @@ type CreateBookingData struct {
 	TotalPrice      string `json:"total_price"`
 	Currency        string `json:"currency"`
 }
+
+type CancelledBookingData struct {
+	BookingPublicID string `json:"booking_public_id"`
+	Status          string `json:"status"`
+}

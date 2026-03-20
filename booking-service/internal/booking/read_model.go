@@ -31,3 +31,14 @@ type ExpiredBookingRow struct {
 	EventPublicID string `gorm:"event_public_id"`
 	Seats         uint64 `gorm:"seats"`
 }
+
+type BookingCancellationRow struct {
+	ID              uint64                `gorm:"column:ID"`
+	BookingPublicID string                `gorm:"column:booking_public_id"`
+	BookingStatus   booking.BookingStatus `gorm:"column:booking_status"`
+	BookingSeats    uint64                `gorm:"column:booking_seats"`
+
+	EventPublicID string `gorm:"column:event_public_id"`
+
+	UserPublicID string `gorm:"column:user_public_id"`
+}

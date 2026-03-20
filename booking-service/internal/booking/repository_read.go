@@ -2,7 +2,9 @@ package booking
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"quicket/booking-service/internal/domain/booking"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -11,7 +13,8 @@ import (
 
 type BookingReadRepo interface {
 	ListAdminBookings() ([]BookingRow, error)
-	RetrieveExpiredBookings(ctx context.Context, limit uint64) ([]ExpiredBookingRow, error)
+	FindExpiredPending(ctx context.Context, limit uint64) ([]ExpiredBookingRow, error)
+	FindForCancellation(ctx context.Context, bookingID string) (*BookingCancellationRow, error)
 }
 
 type BookingReadRepoImpl struct {
@@ -27,10 +30,7 @@ func (r *BookingReadRepoImpl) ListAdminBookings() ([]BookingRow, error) {
 	return nil, nil
 }
 
-func (r *BookingReadRepoImpl) RetrieveExpiredBookings(
-	ctx context.Context,
-	limit uint64,
-) ([]ExpiredBookingRow, error) {
+func (r *BookingReadRepoImpl) FindExpiredPending(ctx context.Context, limit uint64) ([]ExpiredBookingRow, error) {
 
 	var rows []ExpiredBookingRow
 
@@ -46,8 +46,29 @@ func (r *BookingReadRepoImpl) RetrieveExpiredBookings(
 		Error
 
 	if err != nil {
-		return nil, fmt.Errorf("repository_read.RetrieveExpiredBookings: query failed: %w", err)
+		return nil, fmt.Errorf("repository_read.FindExpiredBooking: query failed: %w", err)
 	}
 
 	return rows, nil
+}
+
+func (r *BookingReadRepoImpl) FindForCancellation(ctx context.Context, bookingID string) (*BookingCancellationRow, error) {
+	var book BookingCancellationRow
+
+	err := r.db.WithContext(ctx).
+		Table("bookings").
+		Select("bookings.id, bookings.public_id, bookings.status, bookings.seats, bookings.event_id as event_public_id, bookings.user_id as user_public_id").
+		Where("bookings.public_id = ?", bookingID).
+		Limit(1).
+		Scan(&book).
+		Error
+
+	if err != nil {
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			return nil, booking.ErrBookingNotFound
+		}
+		return nil, fmt.Errorf("repository_read.FindForCancellation: query failed: %w", err)
+	}
+
+	return &book, nil
 }
