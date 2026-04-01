@@ -15,9 +15,9 @@ type Booking struct {
 	EventID uint64 `gorm:"not null;index:idx_bookings_event_id"`
 	UserID  uint64 `gorm:"not null;index:idx_bookings_user_id"`
 
-	Seats      uint64  `gorm:"not null"`
-	TotalPrice float64 `gorm:"type:decimal(12,2);not null"`
-	Currency   string  `gorm:"type:char(3);not null;default:USD"`
+	Seats      uint64 `gorm:"not null"`
+	TotalPrice uint64 `gorm:"type:decimal(12,2);not null"`
+	Currency   string `gorm:"type:char(3);not null;default:USD"`
 
 	Status booking.BookingStatus `gorm:"type:enum('pending','success','failed','cancelled', 'expired');not null;default:'pending';index:idx_bookings_status'"`
 

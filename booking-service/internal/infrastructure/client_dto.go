@@ -6,5 +6,5 @@ type clientServiceError struct {
 }
 
 type reserveSeatsSuccessResponse struct {
-	SeatPrice float64 `json:"seat_price"`
+	SeatPrice uint64 `json:"seat_price"`
 }

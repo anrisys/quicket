@@ -42,7 +42,7 @@ type CreateBookingData struct {
 	BookingPublicID string `json:"booking_public_id"`
 	Status          string `json:"status"`
 	ExpiredAt       string `json:"expired_at"`
-	TotalPrice      string `json:"total_price"`
+	TotalPrice      uint64 `json:"total_price"`
 	Currency        string `json:"currency"`
 }
 

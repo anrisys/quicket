@@ -78,6 +78,26 @@ func (h *Handler) CancelBooking(c *gin.Context) {
 	c.JSON(http.StatusCreated, response)
 }
 
+func (h *Handler) ReceivePaymentWebhook(c *gin.Context) {
+	ctx := c.Request.Context()
+	userPublicID := c.GetString("publicID")
+
+	var req *dto.UpdateStatusWebhookRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		valErr := NewAppError(http.StatusBadRequest, CodeValidation, "invalid update booking status webhook request data", err)
+		c.Error(valErr)
+		return
+	}
+
+	err := h.usu.ProcessPaymentWebhook(ctx, req, userPublicID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, nil)
+}
+
 // HealthCheck godoc
 // @Summary Health Check
 // @Description Check if the service is healthy

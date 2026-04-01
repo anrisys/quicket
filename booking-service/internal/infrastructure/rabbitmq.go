@@ -43,6 +43,10 @@ func (r *RabbitMQPublisher) ReleaseEventSeats(ctx context.Context, payload *book
 	return r.publish(ctx, "booking.seats.release", payload)
 }
 
+func (r *RabbitMQPublisher) RefundRequired(ctx context.Context, payload booking.RefundRequiredEvent) error {
+	return r.publish(ctx, "payment.refund.required", payload)
+}
+
 func (r *RabbitMQPublisher) publish(
 	ctx context.Context,
 	routingKey string,

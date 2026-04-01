@@ -25,7 +25,7 @@ func (c *HTTPEventClient) ReserveSeats(
 	ctx context.Context,
 	eventPublicID string,
 	seats uint64,
-) (float64, error) {
+) (uint64, error) {
 
 	url := fmt.Sprintf("%s/internal/events/%s/reserve", c.baseURL, eventPublicID)
 
@@ -38,7 +38,7 @@ func (c *HTTPEventClient) ReserveSeats(
 		return 0, err
 	}
 
-	var seatPrice float64
+	var seatPrice uint64
 
 	err = Retry(ctx, 3, 100*time.Millisecond, func() error {
 

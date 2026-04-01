@@ -9,7 +9,7 @@ type BookingRow struct {
 	BookingPublicID    string                `gorm:"column:booking_public_id"`
 	BookingStatus      booking.BookingStatus `gorm:"column:booking_status"`
 	BookingSeats       uint64                `gorm:"column:booking_seats"`
-	BookingTotalPrice  float64               `gorm:"column:booking_total_price"`
+	BookingTotalPrice  uint64                `gorm:"column:booking_total_price"`
 	BookingCurrency    string                `gorm:"column:booking_currency"`
 	BookingChannel     booking.Channel       `gorm:"column:booking_channel"`
 	BookingCreatedAt   time.Time             `gorm:"column:booking_created_at"`
@@ -41,4 +41,10 @@ type BookingCancellationRow struct {
 	EventPublicID string `gorm:"column:event_public_id"`
 
 	UserPublicID string `gorm:"column:user_public_id"`
+}
+
+type BookingConfirmationRow struct {
+	ID              uint64 `gorm:"column:ID"`
+	BookingPublicID string `gorm:"column:booking_public_id"`
+	TotalPrice      uint64 `gorm:"column:booking_total_price"`
 }

@@ -2,12 +2,13 @@ package booking
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"quicket/booking-service/internal/booking/dto"
 	"quicket/booking-service/internal/domain/booking"
+	"quicket/booking-service/internal/domain/payment"
 	"quicket/booking-service/internal/helper"
 	"quicket/booking-service/internal/snapshot"
-	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -61,7 +62,7 @@ func (uu *UserUsecase) CreateBooking(ctx context.Context, data *dto.CreateBookin
 		return nil, err
 	}
 
-	totalPrice := price * float64(data.Seats)
+	totalPrice := price * data.Seats
 
 	expiredAt := time.Now().Add(10 * time.Minute)
 
@@ -89,7 +90,7 @@ func (uu *UserUsecase) CreateBooking(ctx context.Context, data *dto.CreateBookin
 		BookingPublicID: bookingEntity.PublicID,
 		Status:          string(bookingEntity.Status),
 		ExpiredAt:       expiredAt.String(),
-		TotalPrice:      strconv.FormatFloat(totalPrice, 'f', 2, 64),
+		TotalPrice:      totalPrice,
 		Currency:        bookingEntity.Currency,
 	}
 
@@ -129,4 +130,72 @@ func (uu *UserUsecase) CancelBooking(ctx context.Context, data *dto.CancelBookin
 	uu.ep.ReleaseEventSeats(ctx, &BookingReleaseSeats{EventPublicID: b.EventPublicID, Seats: b.BookingSeats})
 
 	return &dto.CancelledBookingData{BookingPublicID: b.BookingPublicID, Status: string(booking.BookingStatusCancelled)}, nil
+}
+
+func (uu *UserUsecase) ProcessPaymentWebhook(ctx context.Context, data *dto.UpdateStatusWebhookRequest, user string) error {
+	b, err := uu.rr.FindByPublicID(ctx, data.Data.BookingID)
+	if err != nil {
+		return fmt.Errorf("usecase_user.ConfirSuccess: %w", err)
+	}
+
+	if data.Data.Status == payment.PaymentStatusSuccess && errors.Is(err, booking.ErrBookingNotFound) {
+		uu.ep.RefundRequired(ctx, RefundRequiredEvent{
+			PaymentID: data.Data.PaymentID,
+			Amount:    data.Data.Amount,
+			Currency:  data.Data.Currency,
+		})
+		return nil
+	}
+
+	if data.Data.Status == payment.PaymentStatusSuccess && data.Data.Amount == b.TotalPrice {
+		err := uu.wr.ConfirmSuccess(ctx, b.ID)
+		if err != nil {
+			return fmt.Errorf("usecase_user.HandleBookingPayment: confirm success error: %w", err)
+		}
+
+		return nil
+	}
+
+	if data.Data.Status == payment.PaymentStatusSuccess && data.Data.Amount > b.TotalPrice {
+		err := uu.wr.ConfirmSuccess(ctx, b.ID)
+		if err != nil {
+			return fmt.Errorf("usecase_user.HandleBookingPayment: confirm success error: %w", err)
+		}
+
+		refundAmount := data.Data.Amount - b.TotalPrice
+
+		refundEv := &RefundRequiredEvent{
+			PaymentID: data.Data.PaymentID,
+			Amount:    refundAmount,
+			Currency:  data.Data.Currency,
+		}
+
+		uu.ep.RefundRequired(ctx, *refundEv)
+
+		return nil
+	}
+
+	if data.Data.Status == payment.PaymentStatusSuccess && data.Data.Amount < b.TotalPrice {
+		err := uu.wr.Fail(ctx, b.ID)
+		if err != nil {
+			return fmt.Errorf("user_usecase.HandleBookingPayment: error fail: %w", err)
+		}
+
+		refundEv := &RefundRequiredEvent{
+			PaymentID: data.Data.PaymentID,
+			Amount:    data.Data.Amount,
+			Currency:  data.Data.Currency,
+		}
+
+		uu.ep.RefundRequired(ctx, *refundEv)
+
+		return nil
+	}
+
+	err = uu.wr.Fail(ctx, b.ID)
+	if err != nil {
+		return fmt.Errorf("user_usecase.HandleBookingPayment: error fail: %w", err)
+	}
+
+	return nil
 }

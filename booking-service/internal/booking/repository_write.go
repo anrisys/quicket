@@ -22,6 +22,8 @@ type BookingWriteRepository interface {
 	Create(ctx context.Context, b *Booking) error
 	ExpirePending(ctx context.Context, limit uint64) error
 	Cancel(ctx context.Context, bookingID uint64) error
+	ConfirmSuccess(ctx context.Context, bookingID uint64) error
+	Fail(ctx context.Context, bookingID uint64) error
 }
 
 type BookingWriteRepoImpl struct {
@@ -64,6 +66,34 @@ func (r *BookingWriteRepoImpl) Cancel(ctx context.Context, bookingID uint64) err
 
 	if err != nil {
 		return fmt.Errorf("repository_write.Cancel: query failed: %w", err)
+	}
+	return nil
+}
+
+func (r *BookingWriteRepoImpl) ConfirmSuccess(ctx context.Context, bookingID uint64) error {
+	err := r.db.WithContext(ctx).
+		Model(&Booking{}).
+		Where("id = ?", bookingID).
+		Where("status = ?", booking.BookingStatusSuccess).
+		Update("status", booking.BookingStatusPending).
+		Error
+
+	if err != nil {
+		return fmt.Errorf("repository_write.Confirm: query failed: %w", err)
+	}
+	return nil
+}
+
+func (r *BookingWriteRepoImpl) Fail(ctx context.Context, bookingID uint64) error {
+	err := r.db.WithContext(ctx).
+		Model(&Booking{}).
+		Where("id = ?", bookingID).
+		Where("status = ?", booking.BookingStatusFailed).
+		Update("status", booking.BookingStatusPending).
+		Error
+
+	if err != nil {
+		return fmt.Errorf("repository_write.Fail: query failed: %w", err)
 	}
 	return nil
 }

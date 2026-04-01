@@ -38,6 +38,11 @@ func SetupRouter(h *booking.Handler, l zerolog.Logger, jwtSecret string) *gin.En
 	{
 		protected.POST("/", h.CreateBooking)
 	}
+
+	// TODO: move to payment-service once extracted
+	// Endpoint path intentionally uses /payments prefix to reflect domain ownership
+	r.POST("/api/v1/payment/webhook", h.ReceivePaymentWebhook)
+
 	admin := r.Group("/api/v1/admin/bookings")
 	admin.Use(middleware.JWTAuthMiddleware(jwtSecret))
 

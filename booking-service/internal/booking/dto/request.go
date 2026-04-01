@@ -2,6 +2,7 @@ package dto
 
 import (
 	"quicket/booking-service/internal/domain/booking"
+	"quicket/booking-service/internal/domain/payment"
 	"time"
 )
 
@@ -59,4 +60,20 @@ type CreateBookingRequest struct {
 
 type CancelBookingRequest struct {
 	BookingID string `json:"booking_id" binding:"required"`
+}
+
+type UpdateStatusWebhookRequest struct {
+	EventID    string                  `json:"event_id"`
+	EventType  string                  `json:"event_type"`
+	OccurredAt time.Time               `json:"occurred_at"`
+	Data       UpdateStatusWebhookData `json:"data"`
+}
+
+type UpdateStatusWebhookData struct {
+	PaymentID     string                `json:"payment_id"`
+	BookingID     string                `json:"booking_id"`
+	Status        payment.PaymentStatus `json:"status"`
+	Amount        uint64                `json:"amount"`
+	Currency      string                `json:"currency"`
+	FailureReason string                `json:"failure_reason,omitempty"`
 }

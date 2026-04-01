@@ -13,6 +13,7 @@ import (
 
 type BookingReadRepo interface {
 	ListAdminBookings() ([]BookingRow, error)
+	FindByPublicID(ctx context.Context, publicID string) (*BookingConfirmationRow, error)
 	FindExpiredPending(ctx context.Context, limit uint64) ([]ExpiredBookingRow, error)
 	FindForCancellation(ctx context.Context, bookingID string) (*BookingCancellationRow, error)
 }
@@ -28,6 +29,26 @@ func NewBookingReadRepo(db *gorm.DB, logger zerolog.Logger) *BookingReadRepoImpl
 
 func (r *BookingReadRepoImpl) ListAdminBookings() ([]BookingRow, error) {
 	return nil, nil
+}
+
+func (r *BookingReadRepoImpl) FindByPublicID(ctx context.Context, publicID string) (*BookingConfirmationRow, error) {
+	var b BookingConfirmationRow
+
+	err := r.db.WithContext(ctx).
+		Table("bookings").
+		Select("bookings.id, bookings.booking_public_id").
+		Scan(&b).
+		Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, booking.ErrBookingNotFound
+		}
+
+		return nil, fmt.Errorf("repository_read.FindByPublicID: query failed: %w", err)
+	}
+
+	return &b, nil
 }
 
 func (r *BookingReadRepoImpl) FindExpiredPending(ctx context.Context, limit uint64) ([]ExpiredBookingRow, error) {
